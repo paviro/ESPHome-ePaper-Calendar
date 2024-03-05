@@ -3,6 +3,7 @@ substitutions:
   friendly_name: "ePaper Calendar"
   deep_sleep_duration: 10min
   api_key: "api_key_here"
+  ota_key: "ota_key_here"
 
 
 esphome:
@@ -197,12 +198,11 @@ time:
           - script.execute: update_screen_if_data_updated
                 
 ota:
-  password: "5a0d70ea958b633faa9c9259811e4f50"
+  password: $ota_key
 
 wifi:
   ssid: !secret wifi_ssid
   password: !secret wifi_password
-  use_address: 172.20.3.235
   
 # Include custom fonts
 font:
