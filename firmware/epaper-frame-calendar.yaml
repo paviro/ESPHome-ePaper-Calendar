@@ -1,0 +1,713 @@
+substitutions:
+  device_name: epaper-calendar
+  friendly_name: "ePaper Calendar"
+  deep_sleep_duration: 10min
+  api_key: "api_key_here"
+
+
+esphome:
+  name: $device_name
+  friendly_name: $friendly_name
+  includes:
+    - includes/calendar/calendar_matrix.h
+    - includes/calendar/text_utilities.h
+  on_boot:
+    priority: -100.0
+    then:
+      - wait_until:
+          condition:
+            lambda: 'return id(data_received) == true;'
+      - script.execute: update_screen_if_data_updated
+      - script.execute: check_deep_sleep
+
+
+esp32:
+  board: esp-wrover-kit
+  framework:
+    type: arduino
+
+preferences:
+  flash_write_interval: 10min
+
+deep_sleep:
+  id: deep_sleep_1
+  sleep_duration: $deep_sleep_duration
+  
+http_request:
+  id: http_request_data
+  useragent: esphome/device
+  timeout: 10s
+  
+# Enable logging
+logger:
+
+json:
+
+# Enable Home Assistant API
+api:
+  encryption:
+    key: $api_key
+
+select:
+    - platform: template
+      name: Appearance
+      id: appearance
+      options:
+        - "Dark Mode"
+        - "Light Mode"
+      initial_option: "Dark Mode"
+      restore_value: true
+      optimistic: true
+      entity_category: config
+      on_value:
+        then:
+          - script.execute: update_screen
+    - platform: template
+      name: Footer
+      id: footer
+      options:
+        - "Next Event"
+        - "Random Quote"
+      initial_option: "Next Event"
+      restore_value: true
+      optimistic: true
+      entity_category: config
+      on_value:
+        then:
+          - script.execute: update_screen
+
+button:
+  - platform: shutdown
+    name: Shutdown
+    id: shutdown_button
+  - platform: restart
+    name: Restart
+  - platform: template
+    name: Refresh Screen
+    entity_category: config
+    on_press:
+      - script.execute: update_screen
+
+switch:
+  - platform: gpio
+    id: battery_read_mosfet
+    internal: True
+    pin:
+      mcp23xxx: mcp23017_hub
+      number: 9
+      inverted: true
+
+globals:
+  - id: data_received
+    type: bool
+    restore_value: no
+    initial_value: 'false'
+  - id: recorded_display_refresh
+    type: int
+    restore_value: yes
+    initial_value: '0'
+  - id: battery_empty_symbol_shown
+    type: bool
+    restore_value: yes
+    initial_value: 'true'
+
+script:
+  - id: update_screen
+    then:
+      - lambda: 'id(data_received) = false;'
+      - script.execute: fetch_random_quote
+      - component.update: inkplate_display
+      - lambda: 'id(recorded_display_refresh) += 1;'
+      - delay: 1s
+      - lambda: 'id(display_last_update).publish_state(id(homeassistant_time).now().timestamp);'
+      
+  - id: fetch_random_quote
+    then:
+      - http_request.get:
+          url: "https://api.quotable.io/quotes/random?maxLength=75"
+          verify_ssl: false
+          on_response:
+            then:
+              - lambda: |-
+                  DynamicJsonDocument doc(1024);
+                  DeserializationError error = deserializeJson(doc, id(http_request_data).get_string());
+                  
+                  if (error) {
+                    ESP_LOGD("JSON", "deserializeJson() failed: %s", error.c_str());
+                  } else {
+                    JsonArray root = doc.as<JsonArray>();
+  
+                    if (!root.isNull() && root.size() > 0) {
+                      JsonObject firstObj = root[0];
+                  
+                      id(random_quote).publish_state(firstObj["content"]);
+                      id(random_quote_author).publish_state(firstObj["author"]);
+                    
+                    } else {
+                      ESP_LOGD("JSON", "Error: Root is not a JSON array or is empty.");
+                    }
+                  }
+                  
+  - id: update_screen_if_data_updated
+    then:
+      - if:
+          condition:
+            or:
+              - binary_sensor.is_on: "pauls_kalender_data_update_during_deep_sleep"
+              - and:
+                  - lambda: 'return id(battery_empty_symbol_shown) == true;'
+                  - sensor.in_range:
+                      id: battery_level
+                      above: 0.0
+          then:
+            - logger.log: 'Calendar data updated - Refreshing panel...'
+            - script.execute: update_screen
+          else:
+            - logger.log: 'Calendar data has not been updated - Skipping panel refresh...'
+      - if:
+          condition:
+            sensor.in_range:
+              id: battery_level
+              below: 0.0
+          then:
+            - logger.log: 'Battery is empty - Refreshing panel to show icon...'
+            - script.execute: update_screen
+            - logger.log: 'Battery is empty - Shutting down...'
+            - button.press: shutdown_button
+            
+      
+  - id: check_deep_sleep
+    then:
+          - if:
+              condition:
+                binary_sensor.is_on: disable_deep_sleep
+              then:
+                - logger.log: 'Deep sleep disabled - Waiting for OTA update...'
+              else:
+                - delay: 45s
+                - deep_sleep.enter: deep_sleep_1
+      
+time:
+  - platform: homeassistant
+    id: homeassistant_time
+    on_time:
+      - seconds: 0
+        minutes: /1
+        then:
+          - script.execute: update_screen_if_data_updated
+                
+ota:
+  password: "5a0d70ea958b633faa9c9259811e4f50"
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  use_address: 172.20.3.235
+  
+# Include custom fonts
+font:
+  - file: 'fonts/GothamRnd-Medium.ttf'
+    id: font_gotham_round_medium_18
+    size: 18
+    glyphs: ['&', '@', '!', ',', '.', '?', '"', '%', '(', ')', '+', '-', '_', ':', '°', '0',
+       '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E',
+       'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S',
+       'T', 'U', 'V', 'W', 'X', 'Y', 'Z', ' ', 'a', 'b', 'c', 'd', 'e', 'f',
+       'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't',
+       'u', 'v', 'w', 'x', 'y', 'z','å', 'Ä', 'ä', 'Ö', 'ö', 'Ü', 'ü', 'ß', '/', '·', "'", 'í', 'ấ', 'ạ', ';']
+  - file: 'fonts/GothamRnd-Medium.ttf'
+    id: font_gotham_round_medium_22
+    size: 22
+    glyphs: ['&', '@', '!', ',', '.', '?', '"', '%', '(', ')', '+', '-', '_', ':', '°', '0',
+       '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E',
+       'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S',
+       'T', 'U', 'V', 'W', 'X', 'Y', 'Z', ' ', 'a', 'b', 'c', 'd', 'e', 'f',
+       'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't',
+       'u', 'v', 'w', 'x', 'y', 'z','å', 'Ä', 'ä', 'Ö', 'ö', 'Ü', 'ü', 'ß', '/', '·']
+  - file: 'fonts/GothamRnd-Bold.ttf'
+    id: font_gotham_round_bold_22
+    size: 22
+    glyphs: ['&', '@', '!', ',', '.', '?', '"', '%', '(', ')', '+', '-', '_', ':', '°', '0',
+       '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E',
+       'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S',
+       'T', 'U', 'V', 'W', 'X', 'Y', 'Z', ' ', 'a', 'b', 'c', 'd', 'e', 'f',
+       'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't',
+       'u', 'v', 'w', 'x', 'y', 'z','å', 'Ä', 'ä', 'Ö', 'ö', 'Ü', 'ü', 'ß', '/', '·']
+  - file: 'fonts/GothamRnd-Bold.ttf'
+    id: font_gotham_round_bold_25
+    size: 25
+    glyphs: ['&', '@', '!', ',', '.', '?', '"', '%', '(', ')', '+', '-', '_', ':', '°', '0',
+       '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E',
+       'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S',
+       'T', 'U', 'V', 'W', 'X', 'Y', 'Z', ' ', 'a', 'b', 'c', 'd', 'e', 'f',
+       'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't',
+       'u', 'v', 'w', 'x', 'y', 'z','å', 'Ä', 'ä', 'Ö', 'ö', 'Ü', 'ü', 'ß', '/', '·', "'", 'í', 'ấ', 'ạ', ';']
+  - file: 'fonts/GothamRnd-Medium.ttf'
+    id: font_gotham_round_medium_20
+    size: 20
+    glyphs: ['&', '@', '!', ',', '.', '?', '"', '%', '(', ')', '+', '-', '_', ':', '°', '0',
+       '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E',
+       'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S',
+       'T', 'U', 'V', 'W', 'X', 'Y', 'Z', ' ', 'a', 'b', 'c', 'd', 'e', 'f',
+       'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't',
+       'u', 'v', 'w', 'x', 'y', 'z','å', 'Ä', 'ä', 'Ö', 'ö', 'Ü', 'ü', 'ß', '/', '·']
+  - file: 'fonts/GothamRnd-Medium.ttf'
+    id: font_gotham_round_medium_35
+    size: 35
+    glyphs: ['&', '@', '!', ',', '.', '?', '"', '%', '(', ')', '+', '-', '_', ':', '°', '0',
+       '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E',
+       'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S',
+       'T', 'U', 'V', 'W', 'X', 'Y', 'Z', ' ', 'a', 'b', 'c', 'd', 'e', 'f',
+       'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't',
+       'u', 'v', 'w', 'x', 'y', 'z','å', 'Ä', 'ä', 'Ö', 'ö', 'Ü', 'ü', 'ß', '/', '·']
+  - file: 'fonts/GothamRnd-Bold.ttf'
+    id: font_gotham_round_bold_32
+    size: 32
+    glyphs: ['&', '@', '!', ',', '.', '?', '"', '%', '(', ')', '+', '-', '_', ':', '°', '0',
+       '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E',
+       'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S',
+       'T', 'U', 'V', 'W', 'X', 'Y', 'Z', ' ', 'a', 'b', 'c', 'd', 'e', 'f',
+       'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't',
+       'u', 'v', 'w', 'x', 'y', 'z','å', 'Ä', 'ä', 'Ö', 'ö', 'Ü', 'ü', 'ß', '/', '·']
+  - file: 'fonts/GothamRnd-Medium.ttf'
+    id: font_gotham_round_medium_50
+    size: 50
+    glyphs: ['&', '@', '!', ',', '.', '?', '"', '%', '(', ')', '+', '-', '_', ':', '°', '0',
+       '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E',
+       'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S',
+       'T', 'U', 'V', 'W', 'X', 'Y', 'Z', ' ', 'a', 'b', 'c', 'd', 'e', 'f',
+       'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't',
+       'u', 'v', 'w', 'x', 'y', 'z','å', 'Ä', 'ä', 'Ö', 'ö', 'Ü', 'ü', 'ß', '/', '·']
+  - file: 'fonts/GothamRnd-Bold.ttf'
+    id: font_gotham_round_bold_180
+    size: 180
+    glyphs: ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
+  
+    
+  # Include Material Design Icons font
+  # Thanks to https://community.home-assistant.io/t/display-materialdesign-icons-on-esphome-attached-to-screen/199790/16
+  - file: 'fonts/materialdesignicons-webfont.ttf'
+    id: font_mdi_large
+    size: 300
+    glyphs:
+      - "\U000f10cd" # MdBatteryAlertVariantOutline
+    
+binary_sensor:
+  - platform: homeassistant
+    id: disable_deep_sleep
+    entity_id: input_boolean.disable_deep_sleep
+    on_state:
+      if:
+        condition:
+          binary_sensor.is_off: disable_deep_sleep
+        then:
+          - deep_sleep.enter: deep_sleep_1
+
+  - platform: homeassistant
+    entity_id: binary_sensor.esp_pauls_kalender_data_update_during_deep_sleep
+    id: pauls_kalender_data_update_during_deep_sleep
+
+sensor:
+  - platform: template
+    name: Display Last Update
+    device_class: timestamp
+    entity_category: "diagnostic"
+    id: display_last_update
+
+  - platform: template
+    name: Recorded Display Refresh
+    accuracy_decimals: 0
+    unit_of_measurement: "Refreshes"
+    state_class: "total_increasing"
+    entity_category: "diagnostic"
+    lambda: 'return id(recorded_display_refresh);'
+
+  - platform: homeassistant
+    entity_id: sensor.esp_pauls_kalender
+    attribute: todays_date_day
+    id: todays_date_day
+
+  - platform: wifi_signal
+    name: WiFi Signal Sensor
+    id: wifisignal
+    entity_category: "diagnostic"
+    update_interval: 60s
+
+  - platform: adc
+    id: battery_adc
+    update_interval: never
+    attenuation: 11db
+    internal: True
+    pin: 35
+
+  - platform: template
+    name: "Battery Voltage"
+    id: battery_voltage
+    unit_of_measurement: "V"
+    device_class: voltage
+    entity_category: diagnostic
+    lambda: |-
+      id(battery_read_mosfet).turn_on();
+      delay(1);
+      float adc = id(battery_adc).sample();
+      id(battery_read_mosfet).turn_off();
+      return adc;
+    filters:
+      - multiply: 2
+  
+  - platform: template
+    name: "Battery Level"
+    id: battery_level
+    entity_category: diagnostic
+    device_class: battery
+    unit_of_measurement: '%'
+    lambda: |-
+      // map(current_voltage, battery_empty_voltage, battery_full_voltage, 0, 100)
+      float battery_percentage = map(id(battery_voltage).state, 3.1, 4.2, 0, 100);
+      if (battery_percentage < 0){
+        return 10;
+      } else if (battery_percentage > 100){
+        return 100;
+      } else {
+        return battery_percentage;
+      }
+
+
+text_sensor:
+  - platform: homeassistant
+    entity_id: sensor.esp_pauls_kalender
+    attribute: calendar
+    id: calendar_json
+    on_value:
+      then:
+         - lambda: 'id(data_received) = true;'
+          
+  - platform: template
+    id: random_quote_author
+    
+  - platform: template
+    id: random_quote
+          
+
+  - platform: homeassistant
+    entity_id: sensor.esp_pauls_kalender
+    attribute: todays_day_name
+    id: todays_day_name
+
+  - platform: homeassistant
+    entity_id: sensor.esp_pauls_kalender
+    attribute: todays_date_month_year
+    id: todays_date_month_year
+    
+i2c:
+
+mcp23017:
+  - id: mcp23017_hub
+    address: 0x20
+
+# Now render everything on the ePaper screen.
+display:
+- platform: inkplate6
+  id: inkplate_display
+  greyscale: false
+  partial_updating: false
+  update_interval: never
+  full_update_every: 5
+  model: inkplate_10
+  rotation: 270°
+  
+  ckv_pin: 32
+  sph_pin: 33
+  gmod_pin:
+    mcp23xxx: mcp23017_hub
+    number: 1
+  gpio0_enable_pin:
+    mcp23xxx: mcp23017_hub
+    number: 8
+  oe_pin:
+    mcp23xxx: mcp23017_hub
+    number: 0
+  spv_pin:
+    mcp23xxx: mcp23017_hub
+    number: 2
+  powerup_pin:
+    mcp23xxx: mcp23017_hub
+    number: 4
+  wakeup_pin:
+    mcp23xxx: mcp23017_hub
+    number: 3
+  vcom_pin:
+    mcp23xxx: mcp23017_hub
+    number: 5
+  lambda: |-
+      std::map < std::string, std::string > icon_map {
+        {
+          "battery-alert-variant-outline",
+          "\U000f10cd"
+        }
+      };
+      
+      auto color_content = Color::WHITE;
+      auto color_background = Color::BLACK;
+      
+      auto index = id(appearance).active_index();
+      
+      if (index.has_value()) {
+        if (index.value() == 1) {
+          ESP_LOGD("custom", "Light Mode is selected - using black text on a white background.");
+          color_content = Color::BLACK;
+          color_background = Color::WHITE;
+        } else {
+          ESP_LOGD("custom", "Dark Mode is selected - using white text on a black background.");
+        }
+      }
+      
+      // Fill background in black.
+      it.fill(color_background);
+      
+      // Helper lines: outline Inkplate 6
+      it.line(0, 0, 600, 0, color_content);
+      it.line(600, 0, 600, 800, color_content);
+      it.line(0, 800, 600, 800, color_content);
+      
+      if (id(battery_level).state == 0.0) {
+        id(battery_empty_symbol_shown) = true;
+        it.printf(300, 400, id(font_mdi_large), color_content, TextAlign::CENTER, "%s", icon_map["battery-alert-variant-outline"].c_str());
+      } else {
+        id(battery_empty_symbol_shown) = false;
+      
+        auto time = id(homeassistant_time).now();
+      
+        it.printf(110, 5, id(font_gotham_round_bold_180), color_content, TextAlign::TOP_CENTER, "%d", time.day_of_month);
+        it.printf(110, 160, id(font_gotham_round_medium_35), color_content, TextAlign::TOP_CENTER, "%s", id(todays_day_name).state.c_str());
+        it.printf(110, 195, id(font_gotham_round_medium_20), color_content, TextAlign::TOP_CENTER, "%s", id(todays_date_month_year).state.c_str());
+      
+        // Draw Calendar
+      
+        int calendar_x_pos = 250;
+        int calendar_y_pos = 35;
+      
+        int days_padding_bottom = 10;
+      
+        int circle_size = 17;
+      
+        int cell_size_width = 50;
+        int cell_size_height = 30;
+      
+        char cal[7][7][3]; // Calendar matrix including weekdays
+        int days_line_left_position = 0;
+        int days_line_right_position = 0;
+      
+        get_calendar_matrix(time.year, time.month, cal);
+      
+        for (int i = 0; i < 7; i++) {
+          for (int j = 0; j < 7; j++) {
+            int x_pos = calendar_x_pos + cell_size_width * j;
+            int y_pos = calendar_y_pos + cell_size_height * i;
+      
+            if (i == 0) {
+              // Header (day names)
+              it.printf(x_pos, y_pos, id(font_gotham_round_bold_25), color_content, TextAlign::CENTER, "%s", cal[i][j]);
+              if (j == 0) {
+                days_line_left_position = x_pos - (get_text_width( & it, id(font_gotham_round_bold_22), "%s", cal[i][j]) / 2);
+              } else if (j == 6) {
+                days_line_right_position = x_pos + (get_text_width( & it, id(font_gotham_round_bold_22), "%s", cal[i][j]) / 2);
+              }
+            } else {
+              // Day numbers
+              y_pos += days_padding_bottom;
+              if (atoi(cal[i][j]) == time.day_of_month) {
+                // Highlight current day
+                it.filled_circle(x_pos, y_pos - 1, circle_size, color_content);
+                it.printf(x_pos, y_pos, id(font_gotham_round_bold_22), color_background, TextAlign::CENTER, "%s", cal[i][j]);
+              } else {
+                it.printf(x_pos, y_pos, id(font_gotham_round_medium_22), color_content, TextAlign::CENTER, "%s", cal[i][j]);
+              }
+            }
+          }
+          if (i == 1) {
+            it.line(days_line_left_position, calendar_y_pos + (cell_size_height / 2), days_line_right_position, calendar_y_pos + (cell_size_height / 2), color_content);
+          }
+        }
+      
+        // End Draw Calendar
+      
+        it.filled_rectangle(0, 230, 600, 3, color_content);
+      
+        // Draw event list
+      
+        DynamicJsonDocument doc(4096);
+        deserializeJson(doc, id(calendar_json).state.c_str());
+        JsonArray entries = doc["entries"];
+      
+        int current_y_position = 250; // Initial vertical position
+        const int line_spacing = 15; // Spacing between events within a day
+        const int day_spacing = 15; // Spacing between different days
+        const int entry_padding = 0; // Padding after the last entry of the day
+      
+        for (JsonVariant entry: entries) {
+          int day_number = entry["day"].as < int > ();
+          const char * day_name = entry["day_name"];
+      
+          // Print day number and name
+          it.printf(45, current_y_position, id(font_gotham_round_medium_50), color_content, TextAlign::TOP_CENTER, "%d", day_number);
+          it.printf(45, current_y_position + 45, id(font_gotham_round_medium_22), color_content, TextAlign::TOP_CENTER, "%s", day_name);
+      
+          int entry_y_position = current_y_position + 10; // Initial vertical position for entries
+          int total_day_height = 70; // Initialize with the height of the day title and number
+      
+          JsonArray all_day = entry["all_day"];
+          JsonArray other = entry["other"];
+      
+          auto processEntry = [ & ](JsonVariant & item) {
+            const char * summary = item["summary"];
+            const char * start = item["start"];
+            const char * end = item["end"];
+            const char * location_name = item["location_name"];
+            const char * calendar_name = item["calendar_name"];
+      
+            std::string startTime = start ? extract_time(start) : "";
+            std::string endTime = end ? extract_time(end) : "";
+      
+            std::string subtitle_string = (location_name != nullptr) ? (std::string(calendar_name) + " · " + std::string(location_name)) : std::string(calendar_name);
+            if (subtitle_string.length() > 45) {
+              subtitle_string = subtitle_string.substr(0, 42) + "...";
+            }
+      
+            int summary_height = get_text_height( & it, id(font_gotham_round_bold_25), "%s", summary);
+      
+            it.printf(100, entry_y_position, id(font_gotham_round_bold_25), color_content, TextAlign::TOP_LEFT, "%s", summary);
+      
+            if (!startTime.empty()) {
+              it.printf(585, entry_y_position, id(font_gotham_round_bold_25), color_content, TextAlign::TOP_RIGHT, "%s", startTime.c_str());
+            }
+      
+            entry_y_position += summary_height;
+      
+            int location_height = get_text_height( & it, id(font_gotham_round_medium_18), "%s", subtitle_string.c_str());
+            it.printf(100, entry_y_position, id(font_gotham_round_medium_18), color_content, TextAlign::TOP_LEFT, "%s", subtitle_string.c_str());
+      
+            if (!endTime.empty()) {
+              it.printf(585, entry_y_position, id(font_gotham_round_medium_18), color_content, TextAlign::TOP_RIGHT, "%s", endTime.c_str());
+            }
+      
+            entry_y_position += location_height + line_spacing; // Update position for the next entry
+      
+            // Update total height for the day's entries
+            total_day_height = entry_y_position - current_y_position;
+          };
+      
+          // Process all_day and other entries
+          for (JsonVariant item: all_day) {
+            processEntry(item);
+          }
+      
+          for (JsonVariant item: other) {
+            processEntry(item);
+          }
+      
+          total_day_height += entry_padding;
+      
+          // Draw line to the end of the last entry of the day
+          it.line(85, current_y_position, 85, current_y_position + total_day_height, color_content);
+      
+          // Update current_y_position for the next day based on the total height of the current day's entries
+          current_y_position += total_day_height + day_spacing; // day_spacing ensures space between days
+        }
+        
+        // End Draw event list
+        
+        // Draw Footer
+      
+        auto index = id(footer).active_index();
+      
+        if (index.has_value()) {
+          if (index.value() == 0) {
+            it.printf(10, 700, id(font_gotham_round_bold_22), color_content, TextAlign::BOTTOM_LEFT, "%s", "Nächster Termin:");
+            it.filled_rectangle(0, 705, 600, 3, color_content);
+            it.filled_rectangle(0, 710, 600, 90, color_content);
+      
+            JsonObject first_day = doc["entries"][0].as < JsonObject > ();
+      
+            // Initialise a flag to determine whether to print the no more events message
+            bool no_upcoming_events_today = true;
+      
+            // Check if "entries" exists and has at least one element
+            if (doc.containsKey("entries") && doc["entries"].is < JsonArray > () && doc["entries"].size() > 0) {
+              JsonObject first_day = doc["entries"][0].as < JsonObject > ();
+      
+              // Check if 'is_today' is true and 'other' array has events
+              if (first_day.containsKey("is_today") && first_day["is_today"].as < int > () == 1 &&
+                first_day.containsKey("other") && first_day["other"].is < JsonArray > () && first_day["other"].size() > 0) {
+      
+                // There's an event today, so set flag to not print the no more appointments message
+                no_upcoming_events_today = false;
+      
+                // Safe to access entries[0]["other"][0] and proceed with displaying event details
+                JsonObject next_event = first_day["other"][0];
+      
+                const char * summary = next_event["summary"];
+                const char * start = next_event["start"];
+                const char * end = next_event["end"];
+                const char * location_name = next_event["location_name"];
+                const char * calendar_name = next_event["calendar_name"];
+      
+                std::string startTime = start ? extract_time(start) : "";
+                std::string endTime = end ? extract_time(end) : "";
+      
+                std::string subtitle_string = (location_name != nullptr) ? (std::string(calendar_name) + " · " + std::string(location_name)) : std::string(calendar_name);
+                if (subtitle_string.length() > 45) {
+                  subtitle_string = subtitle_string.substr(0, 42) + "...";
+                }
+      
+                it.printf(10, 727, id(font_gotham_round_bold_32), color_background, TextAlign::TOP_LEFT, "%s", summary);
+                it.printf(12, 760, id(font_gotham_round_medium_22), color_background, TextAlign::TOP_LEFT, "%s", subtitle_string.c_str());
+      
+                it.printf(590, 727, id(font_gotham_round_bold_32), color_background, TextAlign::TOP_RIGHT, "%s", startTime.c_str());
+                it.printf(588, 760, id(font_gotham_round_medium_22), color_background, TextAlign::TOP_RIGHT, "%s", endTime.c_str());
+              }
+            }
+      
+            // Check the flag to decide whether to print the no more appointments message
+            if (no_upcoming_events_today) {
+              it.printf(300, 738, id(font_gotham_round_bold_32), color_background, TextAlign::TOP_CENTER, "%s", "Keine weiteren Termine heute");
+            }
+          } else {
+            it.filled_rectangle(0, 680, 600, 3, color_content);
+            it.filled_rectangle(0, 685, 600, 115, color_content);
+      
+            const int max_characters_per_line = 40;
+            const char * quote = id(random_quote).state.c_str();
+            size_t quote_length = std::strlen(quote);
+      
+            std::string first_part;
+            std::string rest;
+      
+            if (quote_length > max_characters_per_line) {
+              // Find the last space before or at the 40th character
+              int split_pos = max_characters_per_line - 1;
+              while (split_pos > 0 && quote[split_pos] != ' ') {
+                split_pos--;
+              }
+      
+              if (split_pos == 0) {
+                first_part = std::string(quote, quote + max_characters_per_line);
+                rest = std::string(quote + max_characters_per_line);
+              } else {
+                // Split the string at the found space position
+                first_part = std::string(quote, quote + split_pos);
+                rest = std::string(quote + split_pos + 1);
+              }
+              it.printf(300, 705, id(font_gotham_round_bold_25), color_background, TextAlign::TOP_CENTER, "%s", first_part.c_str());
+              it.printf(300, 732, id(font_gotham_round_bold_25), color_background, TextAlign::TOP_CENTER, "%s", rest.c_str());
+              it.printf(300, 780, id(font_gotham_round_medium_18), color_background, TextAlign::BOTTOM_CENTER, "%s", id(random_quote_author).state.c_str());
+      
+            } else {
+              it.printf(300, 715, id(font_gotham_round_bold_25), color_background, TextAlign::TOP_CENTER, "%s", id(random_quote).state.c_str());
+              it.printf(300, 765, id(font_gotham_round_medium_18), color_background, TextAlign::BOTTOM_CENTER, "%s", id(random_quote_author).state.c_str());
+            }
+      
+          }
+        }
+        // End Draw Footer
+      }
