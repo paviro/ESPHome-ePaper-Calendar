@@ -4,6 +4,8 @@ substitutions:
   deep_sleep_duration: 10min
   api_key: "api_key_here"
   ota_key: "ota_key_here"
+  calendar_data_update_during_deep_sleep_entity_id: binary_sensor.esp_calendar_data_update_during_deep_sleep
+  calendar_data_entity_id: sensor.esp_calendar_data
 
 
 esphome:
@@ -154,7 +156,7 @@ script:
       - if:
           condition:
             or:
-              - binary_sensor.is_on: "pauls_kalender_data_update_during_deep_sleep"
+              - binary_sensor.is_on: "calendar_data_update_during_deep_sleep"
               - and:
                   - lambda: 'return id(battery_empty_symbol_shown) == true;'
                   - sensor.in_range:
@@ -203,6 +205,7 @@ ota:
 wifi:
   ssid: !secret wifi_ssid
   password: !secret wifi_password
+  use_address: 172.20.3.235
   
 # Include custom fonts
 font:
@@ -302,8 +305,8 @@ binary_sensor:
           - deep_sleep.enter: deep_sleep_1
 
   - platform: homeassistant
-    entity_id: binary_sensor.esp_pauls_kalender_data_update_during_deep_sleep
-    id: pauls_kalender_data_update_during_deep_sleep
+    entity_id: $calendar_data_update_during_deep_sleep_entity_id
+    id: calendar_data_update_during_deep_sleep
 
 sensor:
   - platform: template
@@ -368,7 +371,7 @@ sensor:
 
 text_sensor:
   - platform: homeassistant
-    entity_id: sensor.esp_pauls_kalender
+    entity_id: $calendar_data_entity_id
     attribute: calendar
     id: calendar_json
     on_value:
@@ -381,12 +384,12 @@ text_sensor:
     id: random_quote
 
   - platform: homeassistant
-    entity_id: sensor.esp_pauls_kalender
+    entity_id: $calendar_data_entity_id
     attribute: todays_day_name
     id: todays_day_name
 
   - platform: homeassistant
-    entity_id: sensor.esp_pauls_kalender
+    entity_id: $calendar_data_entity_id
     attribute: todays_date_month_year
     id: todays_date_month_year
     
