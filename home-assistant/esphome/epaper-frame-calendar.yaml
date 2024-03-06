@@ -13,7 +13,7 @@ substitutions:
   # If you use a different font, you will probably need to adjust the spacing and positions in the code
   font_medium: 'fonts/gotham-rounded/gotham-rounded-medium.ttf'
   font_bold: 'fonts/gotham-rounded/gotham-rounded-bold.ttf'
-  font_mdi: 'fonts/materialdesignicons-webfont.ttf'
+  font_mdi: 'fonts/material-design-webfont/materialdesignicons-webfont.ttf'
 
 
 esphome:
