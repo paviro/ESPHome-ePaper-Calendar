@@ -1,0 +1,49 @@
+# Enable python script support needed for the calendar data conversion
+python_script:
+
+# Helper boolean to disable deep sleep for ota updates (when enabled the device won't go back to sleep after waking up)
+input_boolean:
+  disable_deep_sleep:
+    name: Disable Deep Sleep
+    icon: mdi:sleep-off
+
+template:
+  # Binary sensor that indicates whether the calendar has been updated since the epaper panel was last refreshed - the screen will only refresh on wake up if true
+  - binary_sensor:
+    - name: ESP Calendar Data Update During Deep Sleep
+      state: >
+        {{ states.sensor.esp_calendar_data.last_updated > states.sensor.epaper_calendar_recorded_display_refresh.last_updated }}
+  # Sensor that contains the json calendar data that ESPHome then parses to display the events
+  - trigger:
+        - platform: time_pattern
+          # Run every 30 seconds can be changed here
+          seconds: /30
+    action:
+        # Get the calendar data
+        - service: calendar.get_events
+          data:
+            duration:
+              # How many days into the future entries should be fetched
+              days: 28
+          target:
+            entity_id:
+              # Add your calendar entity id's here
+              - calendar.x
+              - calendar.y
+              - calendar.z
+          response_variable: calendar_response
+        # Convert the received data into our custom format that the ESPHome firmware expects via a python script
+        - service: python_script.esp_calendar_data_conversion
+          data:
+            calendar: "{{ calendar_response }}"
+          response_variable: calendar_converted
+    sensor:
+        - name: ESP Calendar Data
+          state: "OK"
+          attributes:
+            todays_day_name: >
+              {{ ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'][now().weekday()] }}
+            todays_date_month_year: >
+              {% set months = ["January", "Februrary", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"] %}
+              {{ months[now().month-1] }} {{  now().strftime('%Y') }}
+            calendar: "{{ calendar_converted }}"
