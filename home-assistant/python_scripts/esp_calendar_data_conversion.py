@@ -1,6 +1,10 @@
 # Dictionary to map calendar keys to their corresponding names
+# One word calandars don't need to be added calendar.jobs would map to Jobs by default without adding it here
+# calendar.hello_world should be added on the other hand
 CALENDAR_NAMES = {"calendar.x": "X", "calendar.Y": "Y"}
-DAY_NAMES = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"]
+# Day names (which are displayed in the calendar event list) can be translated here if required
+DAY_NAMES = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+# How many entries to send to the ESPHome device
 MAX_ENTRIES = 8
 
 def convert_calendar_format(data):
