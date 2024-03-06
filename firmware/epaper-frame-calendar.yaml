@@ -216,6 +216,15 @@ font:
        'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't',
        'u', 'v', 'w', 'x', 'y', 'z','å', 'Ä', 'ä', 'Ö', 'ö', 'Ü', 'ü', 'ß', '/', '·', "'", 'í', 'ấ', 'ạ', ';']
   - file: 'fonts/GothamRnd-Medium.ttf'
+    id: font_gotham_round_medium_20
+    size: 20
+    glyphs: ['&', '@', '!', ',', '.', '?', '"', '%', '(', ')', '+', '-', '_', ':', '°', '0',
+       '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E',
+       'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S',
+       'T', 'U', 'V', 'W', 'X', 'Y', 'Z', ' ', 'a', 'b', 'c', 'd', 'e', 'f',
+       'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't',
+       'u', 'v', 'w', 'x', 'y', 'z','å', 'Ä', 'ä', 'Ö', 'ö', 'Ü', 'ü', 'ß', '/', '·']
+  - file: 'fonts/GothamRnd-Medium.ttf'
     id: font_gotham_round_medium_22
     size: 22
     glyphs: ['&', '@', '!', ',', '.', '?', '"', '%', '(', ')', '+', '-', '_', ':', '°', '0',
@@ -243,15 +252,6 @@ font:
        'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't',
        'u', 'v', 'w', 'x', 'y', 'z','å', 'Ä', 'ä', 'Ö', 'ö', 'Ü', 'ü', 'ß', '/', '·', "'", 'í', 'ấ', 'ạ', ';']
   - file: 'fonts/GothamRnd-Medium.ttf'
-    id: font_gotham_round_medium_20
-    size: 20
-    glyphs: ['&', '@', '!', ',', '.', '?', '"', '%', '(', ')', '+', '-', '_', ':', '°', '0',
-       '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E',
-       'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S',
-       'T', 'U', 'V', 'W', 'X', 'Y', 'Z', ' ', 'a', 'b', 'c', 'd', 'e', 'f',
-       'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't',
-       'u', 'v', 'w', 'x', 'y', 'z','å', 'Ä', 'ä', 'Ö', 'ö', 'Ü', 'ü', 'ß', '/', '·']
-  - file: 'fonts/GothamRnd-Medium.ttf'
     id: font_gotham_round_medium_35
     size: 35
     glyphs: ['&', '@', '!', ',', '.', '?', '"', '%', '(', ')', '+', '-', '_', ':', '°', '0',
@@ -270,8 +270,8 @@ font:
        'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't',
        'u', 'v', 'w', 'x', 'y', 'z','å', 'Ä', 'ä', 'Ö', 'ö', 'Ü', 'ü', 'ß', '/', '·']
   - file: 'fonts/GothamRnd-Medium.ttf'
-    id: font_gotham_round_medium_50
-    size: 50
+    id: font_gotham_round_medium_45
+    size: 45
     glyphs: ['&', '@', '!', ',', '.', '?', '"', '%', '(', ')', '+', '-', '_', ':', '°', '0',
        '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E',
        'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S',
@@ -284,8 +284,6 @@ font:
     glyphs: ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
   
     
-  # Include Material Design Icons font
-  # Thanks to https://community.home-assistant.io/t/display-materialdesign-icons-on-esphome-attached-to-screen/199790/16
   - file: 'fonts/materialdesignicons-webfont.ttf'
     id: font_mdi_large
     size: 300
@@ -321,11 +319,6 @@ sensor:
     state_class: "total_increasing"
     entity_category: "diagnostic"
     lambda: 'return id(recorded_display_refresh);'
-
-  - platform: homeassistant
-    entity_id: sensor.esp_pauls_kalender
-    attribute: todays_date_day
-    id: todays_date_day
 
   - platform: wifi_signal
     name: WiFi Signal Sensor
@@ -384,10 +377,8 @@ text_sensor:
           
   - platform: template
     id: random_quote_author
-    
   - platform: template
     id: random_quote
-          
 
   - platform: homeassistant
     entity_id: sensor.esp_pauls_kalender
@@ -405,7 +396,6 @@ mcp23017:
   - id: mcp23017_hub
     address: 0x20
 
-# Now render everything on the ePaper screen.
 display:
 - platform: inkplate6
   id: inkplate_display
@@ -465,7 +455,7 @@ display:
       // Fill background in black.
       it.fill(color_background);
       
-      // Helper lines: outline Inkplate 6
+      // Helper lines: Outline Inkplate 6
       it.line(0, 0, 600, 0, color_content);
       it.line(600, 0, 600, 800, color_content);
       it.line(0, 800, 600, 800, color_content);
@@ -541,91 +531,121 @@ display:
         JsonArray entries = doc["entries"];
       
         int current_y_position = 250; // Initial vertical position
-        const int line_spacing = 15; // Spacing between events within a day
+        const int max_y_position = 682; // Maximum vertical position
+        const int events_top_padding = 5; // Padding top first event within a day
+        const int event_spacing = 10; // Spacing between the events within a day
+        const int events_bottom_padding = 5; // Padding after the last entry of the day
         const int day_spacing = 15; // Spacing between different days
-        const int entry_padding = 0; // Padding after the last entry of the day
+      
+        int max_event_title_chars = 30; // Max characters event title 
+        int max_event_subtitle_chars = 44; // Max characters event subtitle 
       
         for (JsonVariant entry: entries) {
           int day_number = entry["day"].as < int > ();
           const char * day_name = entry["day_name"];
       
-          // Print day number and name
-          it.printf(45, current_y_position, id(font_gotham_round_medium_50), color_content, TextAlign::TOP_CENTER, "%d", day_number);
-          it.printf(45, current_y_position + 45, id(font_gotham_round_medium_22), color_content, TextAlign::TOP_CENTER, "%s", day_name);
+          // Calculate day title height
+          int day_number_height = get_text_height( & it, id(font_gotham_round_medium_45), "%d", day_number);
+          int day_name_height = get_text_height( & it, id(font_gotham_round_medium_20), "%s", day_name);
+          int day_title_height = day_number_height + day_name_height; // Total space needed for the day title
       
-          int entry_y_position = current_y_position + 10; // Initial vertical position for entries
-          int total_day_height = 70; // Initialize with the height of the day title and number
+          // Check if there's enough space for the day's title before drawing
+          if (current_y_position + day_title_height > max_y_position) break;
       
-          JsonArray all_day = entry["all_day"];
-          JsonArray other = entry["other"];
+          // Draw day title
+          it.printf(45, current_y_position, id(font_gotham_round_medium_45), color_content, TextAlign::TOP_CENTER, "%d", day_number);
+          it.printf(45, current_y_position + day_number_height - 5, id(font_gotham_round_medium_20), color_content, TextAlign::TOP_CENTER, "%s", day_name);
       
-          auto processEntry = [ & ](JsonVariant & item) {
-            const char * summary = item["summary"];
+          int entry_y_position = current_y_position + events_top_padding; // Initialize entry_y_position to align with the day number + optional padding
+      
+          auto processEntry = [ & ](const JsonVariant & item) -> bool {
+            std::string summary = item["summary"].as < std::string > ();
             const char * start = item["start"];
             const char * end = item["end"];
             const char * location_name = item["location_name"];
             const char * calendar_name = item["calendar_name"];
       
-            std::string startTime = start ? extract_time(start) : "";
-            std::string endTime = end ? extract_time(end) : "";
+            std::string start_time = start ? extract_time(start) : "";
+            std::string end_time = end ? extract_time(end) : "";
       
-            std::string subtitle_string = (location_name != nullptr) ? (std::string(calendar_name) + " · " + std::string(location_name)) : std::string(calendar_name);
-            if (subtitle_string.length() > 45) {
-              subtitle_string = subtitle_string.substr(0, 42) + "...";
+            if (start_time.empty()) {
+              max_event_title_chars += 4;
+              max_event_subtitle_chars += 6;
             }
       
-            int summary_height = get_text_height( & it, id(font_gotham_round_bold_25), "%s", summary);
-      
-            it.printf(100, entry_y_position, id(font_gotham_round_bold_25), color_content, TextAlign::TOP_LEFT, "%s", summary);
-      
-            if (!startTime.empty()) {
-              it.printf(585, entry_y_position, id(font_gotham_round_bold_25), color_content, TextAlign::TOP_RIGHT, "%s", startTime.c_str());
+            std::string subtitle_string = std::string(calendar_name) + (location_name && strlen(location_name) > 0 ? " · " + std::string(location_name) : "");
+            if (subtitle_string.length() > max_event_subtitle_chars) {
+              subtitle_string = subtitle_string.substr(0, max_event_subtitle_chars - 3) + "...";
             }
       
-            entry_y_position += summary_height;
-      
-            int location_height = get_text_height( & it, id(font_gotham_round_medium_18), "%s", subtitle_string.c_str());
-            it.printf(100, entry_y_position, id(font_gotham_round_medium_18), color_content, TextAlign::TOP_LEFT, "%s", subtitle_string.c_str());
-      
-            if (!endTime.empty()) {
-              it.printf(585, entry_y_position, id(font_gotham_round_medium_18), color_content, TextAlign::TOP_RIGHT, "%s", endTime.c_str());
+            if (summary.length() > max_event_title_chars) {
+              summary = summary.substr(0, max_event_title_chars - 3) + "...";
             }
       
-            entry_y_position += location_height + line_spacing; // Update position for the next entry
+            int summary_height = get_text_height( & it, id(font_gotham_round_bold_25), "%s", summary.c_str());
+            int subtitle_height = get_text_height( & it, id(font_gotham_round_medium_18), "%s", subtitle_string.c_str());
       
-            // Update total height for the day's entries
-            total_day_height = entry_y_position - current_y_position;
+            // Check if event will still fit
+            if (entry_y_position + summary_height + subtitle_height + event_spacing <= max_y_position) {
+              // Draw event summary
+              it.printf(100, entry_y_position, id(font_gotham_round_bold_25), color_content, TextAlign::TOP_LEFT, "%s", summary.c_str());
+      
+              // Draw start time
+              if (!start_time.empty()) {
+                it.printf(590, entry_y_position, id(font_gotham_round_bold_25), color_content, TextAlign::TOP_RIGHT, "%s", start_time.c_str());
+              }
+      
+              entry_y_position += summary_height + 2;
+      
+              // Draw subtitle string (calendar name and location)
+              it.printf(100, entry_y_position, id(font_gotham_round_medium_18), color_content, TextAlign::TOP_LEFT, "%s", subtitle_string.c_str());
+      
+              // Draw end time
+              if (!end_time.empty()) {
+                it.printf(590, entry_y_position, id(font_gotham_round_medium_18), color_content, TextAlign::TOP_RIGHT, "%s", end_time.c_str());
+              }
+      
+              entry_y_position += subtitle_height + event_spacing;
+      
+              // Event drawn - return true
+              return true;
+            } else {
+              // Event did not fit and was not drawn - return false
+              return false;
+            }
           };
       
-          // Process all_day and other entries
+          JsonArray all_day = entry["all_day"];
+          JsonArray other = entry["other"];
+      
           for (JsonVariant item: all_day) {
-            processEntry(item);
+            if (!processEntry(item)) break;
           }
-      
+
           for (JsonVariant item: other) {
-            processEntry(item);
+            if (!processEntry(item)) break;
           }
       
-          total_day_height += entry_padding;
+          entry_y_position -= event_spacing + events_bottom_padding;
       
-          // Draw line to the end of the last entry of the day
-          it.line(85, current_y_position, 85, current_y_position + total_day_height, color_content);
+          // Draw the vertical line next to the day titles and events
+          it.line(85, current_y_position, 85, entry_y_position, color_content);
       
-          // Update current_y_position for the next day based on the total height of the current day's entries
-          current_y_position += total_day_height + day_spacing; // day_spacing ensures space between days
+          // Update current_y_position for the next day, ensuring space between days
+          current_y_position = entry_y_position + day_spacing;
         }
-        
+      
         // End Draw event list
-        
+      
         // Draw Footer
       
         auto index = id(footer).active_index();
       
         if (index.has_value()) {
           if (index.value() == 0) {
-            it.printf(10, 700, id(font_gotham_round_bold_22), color_content, TextAlign::BOTTOM_LEFT, "%s", "Nächster Termin:");
-            it.filled_rectangle(0, 705, 600, 3, color_content);
-            it.filled_rectangle(0, 710, 600, 90, color_content);
+            it.printf(10, 704, id(font_gotham_round_bold_22), color_content, TextAlign::BOTTOM_LEFT, "%s", "Nächster Termin:");
+            it.filled_rectangle(0, 707, 600, 3, color_content);
+            it.filled_rectangle(0, 712, 600, 88, color_content);
       
             JsonObject first_day = doc["entries"][0].as < JsonObject > ();
       
@@ -652,29 +672,29 @@ display:
                 const char * location_name = next_event["location_name"];
                 const char * calendar_name = next_event["calendar_name"];
       
-                std::string startTime = start ? extract_time(start) : "";
-                std::string endTime = end ? extract_time(end) : "";
+                std::string start_time = start ? extract_time(start) : "";
+                std::string end_time = end ? extract_time(end) : "";
       
                 std::string subtitle_string = (location_name != nullptr) ? (std::string(calendar_name) + " · " + std::string(location_name)) : std::string(calendar_name);
                 if (subtitle_string.length() > 45) {
                   subtitle_string = subtitle_string.substr(0, 42) + "...";
                 }
       
-                it.printf(10, 727, id(font_gotham_round_bold_32), color_background, TextAlign::TOP_LEFT, "%s", summary);
-                it.printf(12, 760, id(font_gotham_round_medium_22), color_background, TextAlign::TOP_LEFT, "%s", subtitle_string.c_str());
+                it.printf(10, 726, id(font_gotham_round_bold_32), color_background, TextAlign::TOP_LEFT, "%s", summary);
+                it.printf(12, 786, id(font_gotham_round_medium_22), color_background, TextAlign::BOTTOM_LEFT, "%s", subtitle_string.c_str());
       
-                it.printf(590, 727, id(font_gotham_round_bold_32), color_background, TextAlign::TOP_RIGHT, "%s", startTime.c_str());
-                it.printf(588, 760, id(font_gotham_round_medium_22), color_background, TextAlign::TOP_RIGHT, "%s", endTime.c_str());
+                it.printf(590, 726, id(font_gotham_round_bold_32), color_background, TextAlign::TOP_RIGHT, "%s", start_time.c_str());
+                it.printf(588, 786, id(font_gotham_round_medium_22), color_background, TextAlign::BOTTOM_RIGHT, "%s", end_time.c_str());
               }
             }
-      
+
             // Check the flag to decide whether to print the no more appointments message
             if (no_upcoming_events_today) {
-              it.printf(300, 738, id(font_gotham_round_bold_32), color_background, TextAlign::TOP_CENTER, "%s", "Keine weiteren Termine heute");
+              it.printf(300, 740, id(font_gotham_round_bold_32), color_background, TextAlign::TOP_CENTER, "%s", "Keine weiteren Termine heute");
             }
           } else {
-            it.filled_rectangle(0, 680, 600, 3, color_content);
-            it.filled_rectangle(0, 685, 600, 115, color_content);
+            it.filled_rectangle(0, 685, 600, 3, color_content);
+            it.filled_rectangle(0, 690, 600, 110, color_content);
       
             const int max_characters_per_line = 40;
             const char * quote = id(random_quote).state.c_str();
@@ -684,27 +704,38 @@ display:
             std::string rest;
       
             if (quote_length > max_characters_per_line) {
-              // Find the last space before or at the 40th character
-              int split_pos = max_characters_per_line - 1;
-              while (split_pos > 0 && quote[split_pos] != ' ') {
-                split_pos--;
-              }
-      
-              if (split_pos == 0) {
-                first_part = std::string(quote, quote + max_characters_per_line);
-                rest = std::string(quote + max_characters_per_line);
+              // Calculate the midpoint for an optimal split
+              int midpoint = quote_length / 2;
+              int split_pos_left = midpoint;
+              int split_pos_right = midpoint;
+            
+              // Search for the nearest space around the midpoint
+              while (split_pos_left > 0 && quote[split_pos_left] != ' ') split_pos_left--;
+              while (split_pos_right < quote_length && quote[split_pos_right] != ' ') split_pos_right++;
+            
+              // Choose the closest split position that doesn't exceed max characters per line
+              int split_pos;
+              if (midpoint - split_pos_left <= split_pos_right - midpoint && split_pos_left > 0) {
+                split_pos = split_pos_left;
+              } else if (split_pos_right < quote_length) {
+                split_pos = split_pos_right;
               } else {
-                // Split the string at the found space position
-                first_part = std::string(quote, quote + split_pos);
-                rest = std::string(quote + split_pos + 1);
+                // Default split position if no spaces are found near midpoint (unlikely due to search logic)
+                split_pos = midpoint;
               }
-              it.printf(300, 705, id(font_gotham_round_bold_25), color_background, TextAlign::TOP_CENTER, "%s", first_part.c_str());
-              it.printf(300, 732, id(font_gotham_round_bold_25), color_background, TextAlign::TOP_CENTER, "%s", rest.c_str());
-              it.printf(300, 780, id(font_gotham_round_medium_18), color_background, TextAlign::BOTTOM_CENTER, "%s", id(random_quote_author).state.c_str());
-      
+            
+              // Split the quote at the determined position
+              first_part = std::string(quote, quote + split_pos);
+              rest = std::string(quote + split_pos + 1);
+            
+              // Display the split quote
+              it.printf(300, 710, id(font_gotham_round_bold_25), color_background, TextAlign::TOP_CENTER, "%s", first_part.c_str());
+              it.printf(300, 737, id(font_gotham_round_bold_25), color_background, TextAlign::TOP_CENTER, "%s", rest.c_str());
+              it.printf(300, 785, id(font_gotham_round_medium_18), color_background, TextAlign::BOTTOM_CENTER, "%s", id(random_quote_author).state.c_str());
             } else {
-              it.printf(300, 715, id(font_gotham_round_bold_25), color_background, TextAlign::TOP_CENTER, "%s", id(random_quote).state.c_str());
-              it.printf(300, 765, id(font_gotham_round_medium_18), color_background, TextAlign::BOTTOM_CENTER, "%s", id(random_quote_author).state.c_str());
+              // Display the quote without splitting if it doesn't exceed the maximum characters per line
+              it.printf(300, 720, id(font_gotham_round_bold_25), color_background, TextAlign::TOP_CENTER, "%s", id(random_quote).state.c_str());
+              it.printf(300, 770, id(font_gotham_round_medium_18), color_background, TextAlign::BOTTOM_CENTER, "%s", id(random_quote_author).state.c_str());
             }
       
           }
