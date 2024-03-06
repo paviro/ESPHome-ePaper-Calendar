@@ -1,7 +1,7 @@
 # Dictionary to map calendar keys to their corresponding names
 CALENDAR_NAMES = {"calendar.x": "X", "calendar.Y": "Y"}
 DAY_NAMES = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"]
-MAX_ENTRIES = 5
+MAX_ENTRIES = 8
 
 def convert_calendar_format(data):
     # Initialize a dictionary to store events grouped by date
