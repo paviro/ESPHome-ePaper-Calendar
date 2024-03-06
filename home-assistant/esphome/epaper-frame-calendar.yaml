@@ -1,11 +1,19 @@
 substitutions:
   device_name: epaper-calendar
   friendly_name: "ePaper Calendar"
+  
   deep_sleep_duration: 10min
+  calendar_data_entity_id: sensor.esp_calendar_data
+  calendar_data_update_during_deep_sleep_entity_id: binary_sensor.esp_calendar_data_update_during_deep_sleep
+  
+  # You can copy a random api key from here: https://esphome.io/components/api.html
   api_key: "api_key_here"
   ota_key: "ota_key_here"
-  calendar_data_update_during_deep_sleep_entity_id: binary_sensor.esp_calendar_data_update_during_deep_sleep
-  calendar_data_entity_id: sensor.esp_calendar_data
+  
+  # If you use a different font, you will probably need to adjust the spacing and positions in the code
+  font_medium: 'fonts/gotham-rounded/gotham-rounded-medium.ttf'
+  font_bold: 'fonts/gotham-rounded/gotham-rounded-bold.ttf'
+  font_mdi: 'fonts/materialdesignicons-webfont.ttf'
 
 
 esphome:
@@ -209,8 +217,8 @@ wifi:
   
 # Include custom fonts
 font:
-  - file: 'fonts/GothamRnd-Medium.ttf'
-    id: font_gotham_round_medium_18
+  - file: $font_medium
+    id: font_medium_18
     size: 18
     glyphs: ['&', '@', '!', ',', '.', '?', '"', '%', '(', ')', '+', '-', '_', ':', '°', '0',
        '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E',
@@ -218,8 +226,8 @@ font:
        'T', 'U', 'V', 'W', 'X', 'Y', 'Z', ' ', 'a', 'b', 'c', 'd', 'e', 'f',
        'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't',
        'u', 'v', 'w', 'x', 'y', 'z','å', 'Ä', 'ä', 'Ö', 'ö', 'Ü', 'ü', 'ß', '/', '·', "'", 'í', 'ấ', 'ạ', ';']
-  - file: 'fonts/GothamRnd-Medium.ttf'
-    id: font_gotham_round_medium_20
+  - file: $font_medium
+    id: font_medium_20
     size: 20
     glyphs: ['&', '@', '!', ',', '.', '?', '"', '%', '(', ')', '+', '-', '_', ':', '°', '0',
        '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E',
@@ -227,8 +235,8 @@ font:
        'T', 'U', 'V', 'W', 'X', 'Y', 'Z', ' ', 'a', 'b', 'c', 'd', 'e', 'f',
        'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't',
        'u', 'v', 'w', 'x', 'y', 'z','å', 'Ä', 'ä', 'Ö', 'ö', 'Ü', 'ü', 'ß', '/', '·']
-  - file: 'fonts/GothamRnd-Medium.ttf'
-    id: font_gotham_round_medium_22
+  - file: $font_medium
+    id: font_medium_22
     size: 22
     glyphs: ['&', '@', '!', ',', '.', '?', '"', '%', '(', ')', '+', '-', '_', ':', '°', '0',
        '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E',
@@ -236,8 +244,8 @@ font:
        'T', 'U', 'V', 'W', 'X', 'Y', 'Z', ' ', 'a', 'b', 'c', 'd', 'e', 'f',
        'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't',
        'u', 'v', 'w', 'x', 'y', 'z','å', 'Ä', 'ä', 'Ö', 'ö', 'Ü', 'ü', 'ß', '/', '·']
-  - file: 'fonts/GothamRnd-Bold.ttf'
-    id: font_gotham_round_bold_22
+  - file: $font_bold
+    id: font_bold_22
     size: 22
     glyphs: ['&', '@', '!', ',', '.', '?', '"', '%', '(', ')', '+', '-', '_', ':', '°', '0',
        '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E',
@@ -245,8 +253,8 @@ font:
        'T', 'U', 'V', 'W', 'X', 'Y', 'Z', ' ', 'a', 'b', 'c', 'd', 'e', 'f',
        'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't',
        'u', 'v', 'w', 'x', 'y', 'z','å', 'Ä', 'ä', 'Ö', 'ö', 'Ü', 'ü', 'ß', '/', '·']
-  - file: 'fonts/GothamRnd-Bold.ttf'
-    id: font_gotham_round_bold_25
+  - file: $font_bold
+    id: font_bold_25
     size: 25
     glyphs: ['&', '@', '!', ',', '.', '?', '"', '%', '(', ')', '+', '-', '_', ':', '°', '0',
        '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E',
@@ -254,8 +262,8 @@ font:
        'T', 'U', 'V', 'W', 'X', 'Y', 'Z', ' ', 'a', 'b', 'c', 'd', 'e', 'f',
        'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't',
        'u', 'v', 'w', 'x', 'y', 'z','å', 'Ä', 'ä', 'Ö', 'ö', 'Ü', 'ü', 'ß', '/', '·', "'", 'í', 'ấ', 'ạ', ';']
-  - file: 'fonts/GothamRnd-Medium.ttf'
-    id: font_gotham_round_medium_35
+  - file: $font_medium
+    id: font_medium_35
     size: 35
     glyphs: ['&', '@', '!', ',', '.', '?', '"', '%', '(', ')', '+', '-', '_', ':', '°', '0',
        '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E',
@@ -263,8 +271,8 @@ font:
        'T', 'U', 'V', 'W', 'X', 'Y', 'Z', ' ', 'a', 'b', 'c', 'd', 'e', 'f',
        'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't',
        'u', 'v', 'w', 'x', 'y', 'z','å', 'Ä', 'ä', 'Ö', 'ö', 'Ü', 'ü', 'ß', '/', '·']
-  - file: 'fonts/GothamRnd-Bold.ttf'
-    id: font_gotham_round_bold_32
+  - file: $font_bold
+    id: font_bold_32
     size: 32
     glyphs: ['&', '@', '!', ',', '.', '?', '"', '%', '(', ')', '+', '-', '_', ':', '°', '0',
        '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E',
@@ -272,8 +280,8 @@ font:
        'T', 'U', 'V', 'W', 'X', 'Y', 'Z', ' ', 'a', 'b', 'c', 'd', 'e', 'f',
        'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't',
        'u', 'v', 'w', 'x', 'y', 'z','å', 'Ä', 'ä', 'Ö', 'ö', 'Ü', 'ü', 'ß', '/', '·']
-  - file: 'fonts/GothamRnd-Medium.ttf'
-    id: font_gotham_round_medium_45
+  - file: $font_medium
+    id: font_medium_45
     size: 45
     glyphs: ['&', '@', '!', ',', '.', '?', '"', '%', '(', ')', '+', '-', '_', ':', '°', '0',
        '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E',
@@ -281,13 +289,13 @@ font:
        'T', 'U', 'V', 'W', 'X', 'Y', 'Z', ' ', 'a', 'b', 'c', 'd', 'e', 'f',
        'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't',
        'u', 'v', 'w', 'x', 'y', 'z','å', 'Ä', 'ä', 'Ö', 'ö', 'Ü', 'ü', 'ß', '/', '·']
-  - file: 'fonts/GothamRnd-Bold.ttf'
-    id: font_gotham_round_bold_180
+  - file: $font_bold
+    id: font_bold_180
     size: 180
     glyphs: ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
   
     
-  - file: 'fonts/materialdesignicons-webfont.ttf'
+  - file: $font_mdi
     id: font_mdi_large
     size: 300
     glyphs:
@@ -471,9 +479,9 @@ display:
       
         auto time = id(homeassistant_time).now();
       
-        it.printf(110, 5, id(font_gotham_round_bold_180), color_content, TextAlign::TOP_CENTER, "%d", time.day_of_month);
-        it.printf(110, 160, id(font_gotham_round_medium_35), color_content, TextAlign::TOP_CENTER, "%s", id(todays_day_name).state.c_str());
-        it.printf(110, 195, id(font_gotham_round_medium_20), color_content, TextAlign::TOP_CENTER, "%s", id(todays_date_month_year).state.c_str());
+        it.printf(110, 5, id(font_bold_180), color_content, TextAlign::TOP_CENTER, "%d", time.day_of_month);
+        it.printf(110, 160, id(font_medium_35), color_content, TextAlign::TOP_CENTER, "%s", id(todays_day_name).state.c_str());
+        it.printf(110, 195, id(font_medium_20), color_content, TextAlign::TOP_CENTER, "%s", id(todays_date_month_year).state.c_str());
       
         // Draw Calendar
       
@@ -500,11 +508,11 @@ display:
       
             if (i == 0) {
               // Header (day names)
-              it.printf(x_pos, y_pos, id(font_gotham_round_bold_25), color_content, TextAlign::CENTER, "%s", cal[i][j]);
+              it.printf(x_pos, y_pos, id(font_bold_25), color_content, TextAlign::CENTER, "%s", cal[i][j]);
               if (j == 0) {
-                days_line_left_position = x_pos - (get_text_width( & it, id(font_gotham_round_bold_22), "%s", cal[i][j]) / 2);
+                days_line_left_position = x_pos - (get_text_width( & it, id(font_bold_22), "%s", cal[i][j]) / 2);
               } else if (j == 6) {
-                days_line_right_position = x_pos + (get_text_width( & it, id(font_gotham_round_bold_22), "%s", cal[i][j]) / 2);
+                days_line_right_position = x_pos + (get_text_width( & it, id(font_bold_22), "%s", cal[i][j]) / 2);
               }
             } else {
               // Day numbers
@@ -512,9 +520,9 @@ display:
               if (atoi(cal[i][j]) == time.day_of_month) {
                 // Highlight current day
                 it.filled_circle(x_pos, y_pos - 1, circle_size, color_content);
-                it.printf(x_pos, y_pos, id(font_gotham_round_bold_22), color_background, TextAlign::CENTER, "%s", cal[i][j]);
+                it.printf(x_pos, y_pos, id(font_bold_22), color_background, TextAlign::CENTER, "%s", cal[i][j]);
               } else {
-                it.printf(x_pos, y_pos, id(font_gotham_round_medium_22), color_content, TextAlign::CENTER, "%s", cal[i][j]);
+                it.printf(x_pos, y_pos, id(font_medium_22), color_content, TextAlign::CENTER, "%s", cal[i][j]);
               }
             }
           }
@@ -548,16 +556,16 @@ display:
           const char * day_name = entry["day_name"];
       
           // Calculate day title height
-          int day_number_height = get_text_height( & it, id(font_gotham_round_medium_45), "%d", day_number);
-          int day_name_height = get_text_height( & it, id(font_gotham_round_medium_20), "%s", day_name);
+          int day_number_height = get_text_height( & it, id(font_medium_45), "%d", day_number);
+          int day_name_height = get_text_height( & it, id(font_medium_20), "%s", day_name);
           int day_title_height = day_number_height + day_name_height; // Total space needed for the day title
       
           // Check if there's enough space for the day's title before drawing
           if (current_y_position + day_title_height > max_y_position) break;
       
           // Draw day title
-          it.printf(45, current_y_position, id(font_gotham_round_medium_45), color_content, TextAlign::TOP_CENTER, "%d", day_number);
-          it.printf(45, current_y_position + day_number_height - 5, id(font_gotham_round_medium_20), color_content, TextAlign::TOP_CENTER, "%s", day_name);
+          it.printf(45, current_y_position, id(font_medium_45), color_content, TextAlign::TOP_CENTER, "%d", day_number);
+          it.printf(45, current_y_position + day_number_height - 5, id(font_medium_20), color_content, TextAlign::TOP_CENTER, "%s", day_name);
       
           int entry_y_position = current_y_position + events_top_padding; // Initialize entry_y_position to align with the day number + optional padding
       
@@ -585,27 +593,27 @@ display:
               summary = summary.substr(0, max_event_title_chars - 3) + "...";
             }
       
-            int summary_height = get_text_height( & it, id(font_gotham_round_bold_25), "%s", summary.c_str());
-            int subtitle_height = get_text_height( & it, id(font_gotham_round_medium_18), "%s", subtitle_string.c_str());
+            int summary_height = get_text_height( & it, id(font_bold_25), "%s", summary.c_str());
+            int subtitle_height = get_text_height( & it, id(font_medium_18), "%s", subtitle_string.c_str());
       
             // Check if event will still fit
             if (entry_y_position + summary_height + subtitle_height + event_spacing <= max_y_position) {
               // Draw event summary
-              it.printf(100, entry_y_position, id(font_gotham_round_bold_25), color_content, TextAlign::TOP_LEFT, "%s", summary.c_str());
+              it.printf(100, entry_y_position, id(font_bold_25), color_content, TextAlign::TOP_LEFT, "%s", summary.c_str());
       
               // Draw start time
               if (!start_time.empty()) {
-                it.printf(590, entry_y_position, id(font_gotham_round_bold_25), color_content, TextAlign::TOP_RIGHT, "%s", start_time.c_str());
+                it.printf(590, entry_y_position, id(font_bold_25), color_content, TextAlign::TOP_RIGHT, "%s", start_time.c_str());
               }
       
               entry_y_position += summary_height + 2;
       
               // Draw subtitle string (calendar name and location)
-              it.printf(100, entry_y_position, id(font_gotham_round_medium_18), color_content, TextAlign::TOP_LEFT, "%s", subtitle_string.c_str());
+              it.printf(100, entry_y_position, id(font_medium_18), color_content, TextAlign::TOP_LEFT, "%s", subtitle_string.c_str());
       
               // Draw end time
               if (!end_time.empty()) {
-                it.printf(590, entry_y_position, id(font_gotham_round_medium_18), color_content, TextAlign::TOP_RIGHT, "%s", end_time.c_str());
+                it.printf(590, entry_y_position, id(font_medium_18), color_content, TextAlign::TOP_RIGHT, "%s", end_time.c_str());
               }
       
               entry_y_position += subtitle_height + event_spacing;
@@ -646,7 +654,7 @@ display:
       
         if (index.has_value()) {
           if (index.value() == 0) {
-            it.printf(10, 704, id(font_gotham_round_bold_22), color_content, TextAlign::BOTTOM_LEFT, "%s", "Nächster Termin:");
+            it.printf(10, 704, id(font_bold_22), color_content, TextAlign::BOTTOM_LEFT, "%s", "Nächster Termin:");
             it.filled_rectangle(0, 707, 600, 3, color_content);
             it.filled_rectangle(0, 712, 600, 88, color_content);
       
@@ -683,17 +691,17 @@ display:
                   subtitle_string = subtitle_string.substr(0, 42) + "...";
                 }
       
-                it.printf(10, 726, id(font_gotham_round_bold_32), color_background, TextAlign::TOP_LEFT, "%s", summary);
-                it.printf(12, 786, id(font_gotham_round_medium_22), color_background, TextAlign::BOTTOM_LEFT, "%s", subtitle_string.c_str());
+                it.printf(10, 726, id(font_bold_32), color_background, TextAlign::TOP_LEFT, "%s", summary);
+                it.printf(12, 786, id(font_medium_22), color_background, TextAlign::BOTTOM_LEFT, "%s", subtitle_string.c_str());
       
-                it.printf(590, 726, id(font_gotham_round_bold_32), color_background, TextAlign::TOP_RIGHT, "%s", start_time.c_str());
-                it.printf(588, 786, id(font_gotham_round_medium_22), color_background, TextAlign::BOTTOM_RIGHT, "%s", end_time.c_str());
+                it.printf(590, 726, id(font_bold_32), color_background, TextAlign::TOP_RIGHT, "%s", start_time.c_str());
+                it.printf(588, 786, id(font_medium_22), color_background, TextAlign::BOTTOM_RIGHT, "%s", end_time.c_str());
               }
             }
 
             // Check the flag to decide whether to print the no more appointments message
             if (no_upcoming_events_today) {
-              it.printf(300, 740, id(font_gotham_round_bold_32), color_background, TextAlign::TOP_CENTER, "%s", "Keine weiteren Termine heute");
+              it.printf(300, 740, id(font_bold_32), color_background, TextAlign::TOP_CENTER, "%s", "Keine weiteren Termine heute");
             }
           } else {
             it.filled_rectangle(0, 685, 600, 3, color_content);
@@ -732,13 +740,13 @@ display:
               rest = std::string(quote + split_pos + 1);
             
               // Display the split quote
-              it.printf(300, 710, id(font_gotham_round_bold_25), color_background, TextAlign::TOP_CENTER, "%s", first_part.c_str());
-              it.printf(300, 737, id(font_gotham_round_bold_25), color_background, TextAlign::TOP_CENTER, "%s", rest.c_str());
-              it.printf(300, 785, id(font_gotham_round_medium_18), color_background, TextAlign::BOTTOM_CENTER, "%s", id(random_quote_author).state.c_str());
+              it.printf(300, 710, id(font_bold_25), color_background, TextAlign::TOP_CENTER, "%s", first_part.c_str());
+              it.printf(300, 737, id(font_bold_25), color_background, TextAlign::TOP_CENTER, "%s", rest.c_str());
+              it.printf(300, 785, id(font_medium_18), color_background, TextAlign::BOTTOM_CENTER, "%s", id(random_quote_author).state.c_str());
             } else {
               // Display the quote without splitting if it doesn't exceed the maximum characters per line
-              it.printf(300, 720, id(font_gotham_round_bold_25), color_background, TextAlign::TOP_CENTER, "%s", id(random_quote).state.c_str());
-              it.printf(300, 770, id(font_gotham_round_medium_18), color_background, TextAlign::BOTTOM_CENTER, "%s", id(random_quote_author).state.c_str());
+              it.printf(300, 720, id(font_bold_25), color_background, TextAlign::TOP_CENTER, "%s", id(random_quote).state.c_str());
+              it.printf(300, 770, id(font_medium_18), color_background, TextAlign::BOTTOM_CENTER, "%s", id(random_quote_author).state.c_str());
             }
       
           }
