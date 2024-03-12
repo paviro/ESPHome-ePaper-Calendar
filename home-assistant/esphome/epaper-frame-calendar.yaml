@@ -130,7 +130,11 @@ script:
   - id: update_screen
     then:
       - lambda: 'id(data_received) = false;'
-      - script.execute: fetch_random_quote
+      - if:
+          condition:
+            lambda: 'return id(footer).state == "Random Quote";'
+          then:
+            - script.execute: fetch_random_quote
       - component.update: inkplate_display
       - lambda: 'id(recorded_display_refresh) += 1;'
       - delay: 1s
