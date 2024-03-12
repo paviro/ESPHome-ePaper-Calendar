@@ -469,11 +469,6 @@ display:
       // Fill background in black.
       it.fill(color_background);
       
-      // Helper lines: Outline Inkplate 6
-      it.line(0, 0, 600, 0, color_content);
-      it.line(600, 0, 600, 800, color_content);
-      it.line(0, 800, 600, 800, color_content);
-      
       if (id(battery_level).state == 0.0) {
         id(battery_empty_symbol_shown) = true;
         it.printf(300, 400, id(font_mdi_large), color_content, TextAlign::CENTER, "%s", icon_map["battery-alert-variant-outline"].c_str());
