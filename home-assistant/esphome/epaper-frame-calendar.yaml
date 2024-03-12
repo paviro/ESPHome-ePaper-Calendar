@@ -221,7 +221,6 @@ ota:
 wifi:
   ssid: !secret wifi_ssid
   password: !secret wifi_password
-  use_address: 172.20.3.235
   
 # Include custom fonts
 font:
