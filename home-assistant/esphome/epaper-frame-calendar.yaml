@@ -393,6 +393,9 @@ sensor:
       - calibrate_linear:
           - $battery_empty_voltage -> 0.0
           - $battery_full_voltage -> 100
+      - clamp:
+          min_value: 0
+          max_value: 100
 
 
 text_sensor:
