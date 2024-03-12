@@ -64,9 +64,9 @@ select:
       name: Appearance
       id: appearance
       options:
-        - "Dark Mode"
         - "Light Mode"
-      initial_option: "Dark Mode"
+        - "Dark Mode"
+      initial_option: "Light Mode"
       restore_value: true
       optimistic: true
       entity_category: config
@@ -454,7 +454,7 @@ display:
       auto index = id(appearance).active_index();
       
       if (index.has_value()) {
-        if (index.value() == 1) {
+        if (index.value() == 0) {
           ESP_LOGD("custom", "Light Mode is selected - using black text on a white background.");
           color_content = Color::BLACK;
           color_background = Color::WHITE;
