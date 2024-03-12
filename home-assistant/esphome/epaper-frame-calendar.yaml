@@ -14,6 +14,10 @@ substitutions:
   font_medium: 'fonts/gotham-rounded/gotham-rounded-medium.ttf'
   font_bold: 'fonts/gotham-rounded/gotham-rounded-bold.ttf'
   font_mdi: 'fonts/material-design-webfont/materialdesignicons-webfont.ttf'
+  
+  # Specify the full and empty voltage of the battery you use
+  battery_full_voltage: "4.2" # in V
+  battery_empty_voltage: "3.1" # in V
 
 
 esphome:
@@ -366,15 +370,11 @@ sensor:
     device_class: battery
     unit_of_measurement: '%'
     lambda: |-
-      // map(current_voltage, battery_empty_voltage, battery_full_voltage, 0, 100)
-      float battery_percentage = map(id(battery_voltage).state, 3.1, 4.2, 0, 100);
-      if (battery_percentage < 0){
-        return 10;
-      } else if (battery_percentage > 100){
-        return 100;
-      } else {
-        return battery_percentage;
-      }
+      return id(battery_voltage).state;
+    filters:
+      - calibrate_linear:
+          - $battery_empty_voltage -> 0.0
+          - $battery_full_voltage -> 100
 
 
 text_sensor:
