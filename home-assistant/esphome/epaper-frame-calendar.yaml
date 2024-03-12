@@ -30,22 +30,25 @@ esphome:
     priority: -100.0
     then:
       - if:
-          condition: # 0 = normal boot | 4 = wake up
-            - lambda: 'return esp_sleep_get_wakeup_cause() == 0;'
+          condition: # 0 = normal boot | 2 = wakeup button | 4 = wake up timer 
+            - lambda: 'return esp_sleep_get_wakeup_cause() == 4;'
           then:
-            # Cold boot: update screen to show boot screen
-            - script.execute: update_screen
+            # Deep sleep wake up: update screen if data has changed
             - wait_until:
                 condition:
                   lambda: 'return id(data_received) == true;'
-            - delay: 2s
-            - script.execute: update_screen
+            - script.execute: update_screen_if_data_updated
           else:
-              # Deep sleep wake up: update screen if data has changed
-              - wait_until:
-                  condition:
-                    lambda: 'return id(data_received) == true;'
-              - script.execute: update_screen_if_data_updated
+            - if:
+                condition:
+                  - lambda: 'return esp_sleep_get_wakeup_cause() == 0;'
+                then:
+                  # Cold boot: update screen before we received data to show boot screen
+                  - script.execute: update_screen
+            - wait_until:
+                condition:
+                  lambda: 'return id(data_received) == true;'
+            - script.execute: update_screen
       - script.execute: check_deep_sleep
 
 
@@ -60,6 +63,9 @@ preferences:
 deep_sleep:
   id: deep_sleep_1
   sleep_duration: $deep_sleep_duration
+  wakeup_pin: 
+    number: 36
+    inverted: true
   
 http_request:
   id: http_request_data
