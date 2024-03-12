@@ -108,9 +108,9 @@ switch:
     id: battery_read_mosfet
     internal: True
     pin:
-      mcp23xxx: mcp23017_hub
+      pca6416a: pca6416a_hub
       number: 9
-      inverted: true
+      inverted: false
 
 globals:
   - id: data_received
@@ -406,8 +406,8 @@ text_sensor:
     
 i2c:
 
-mcp23017:
-  - id: mcp23017_hub
+pca6416a:
+  - id: pca6416a_hub
     address: 0x20
 
 display:
@@ -417,31 +417,31 @@ display:
   partial_updating: false
   update_interval: never
   full_update_every: 5
-  model: inkplate_10
+  model: inkplate_6_v2
   rotation: 270°
   
   ckv_pin: 32
   sph_pin: 33
   gmod_pin:
-    mcp23xxx: mcp23017_hub
+    pca6416a: pca6416a_hub
     number: 1
   gpio0_enable_pin:
-    mcp23xxx: mcp23017_hub
+    pca6416a: pca6416a_hub
     number: 8
   oe_pin:
-    mcp23xxx: mcp23017_hub
+    pca6416a: pca6416a_hub
     number: 0
   spv_pin:
-    mcp23xxx: mcp23017_hub
+    pca6416a: pca6416a_hub
     number: 2
   powerup_pin:
-    mcp23xxx: mcp23017_hub
+    pca6416a: pca6416a_hub
     number: 4
   wakeup_pin:
-    mcp23xxx: mcp23017_hub
+    pca6416a: pca6416a_hub
     number: 3
   vcom_pin:
-    mcp23xxx: mcp23017_hub
+    pca6416a: pca6416a_hub
     number: 5
   lambda: |-
       std::map < std::string, std::string > icon_map {
