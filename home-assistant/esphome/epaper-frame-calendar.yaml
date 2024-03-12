@@ -369,6 +369,7 @@ sensor:
     name: "Battery Voltage"
     id: battery_voltage
     unit_of_measurement: "V"
+    accuracy_decimals: 3
     device_class: voltage
     entity_category: diagnostic
     lambda: |-
