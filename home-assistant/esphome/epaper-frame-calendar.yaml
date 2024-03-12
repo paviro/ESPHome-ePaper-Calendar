@@ -29,10 +29,23 @@ esphome:
   on_boot:
     priority: -100.0
     then:
-      - wait_until:
-          condition:
-            lambda: 'return id(data_received) == true;'
-      - script.execute: update_screen_if_data_updated
+      - if:
+          condition: # 0 = normal boot | 4 = wake up
+            - lambda: 'return esp_sleep_get_wakeup_cause() == 0;'
+          then:
+            # Cold boot: update screen to show boot screen
+            - script.execute: update_screen
+            - wait_until:
+                condition:
+                  lambda: 'return id(data_received) == true;'
+            - delay: 2s
+            - script.execute: update_screen
+          else:
+              # Deep sleep wake up: update screen if data has changed
+              - wait_until:
+                  condition:
+                    lambda: 'return id(data_received) == true;'
+              - script.execute: update_screen_if_data_updated
       - script.execute: check_deep_sleep
 
 
@@ -129,7 +142,6 @@ globals:
 script:
   - id: update_screen
     then:
-      - lambda: 'id(data_received) = false;'
       - if:
           condition:
             lambda: 'return id(footer).state == "Random Quote";'
@@ -306,7 +318,9 @@ font:
     id: font_mdi_large
     size: 300
     glyphs:
-      - "\U000f10cd" # MdBatteryAlertVariantOutline
+      # Definitions from https://github.com/kivymd/KivyMD/blob/master/kivymd/icon_definitions.py
+      - "\U000f10cd" # battery-alert-variant-outline
+      - "\U000F0E8E" # calendar-sync
     
 binary_sensor:
   - platform: homeassistant
@@ -448,6 +462,9 @@ display:
         {
           "battery-alert-variant-outline",
           "\U000f10cd"
+        }, {
+          "calendar-sync",
+          "\U000F0E8E"
         }
       };
       
@@ -475,279 +492,284 @@ display:
       } else {
         id(battery_empty_symbol_shown) = false;
       
-        auto time = id(homeassistant_time).now();
+        if (id(data_received) == false) {
+          it.printf(300, 350, id(font_mdi_large), color_content, TextAlign::CENTER, "%s", icon_map["calendar-sync"].c_str());
+          it.printf(300, 500, id(font_medium_35), color_content, TextAlign::TOP_CENTER, "Waiting for data...");
+        } else {
+          auto time = id(homeassistant_time).now();
       
-        it.printf(110, 5, id(font_bold_180), color_content, TextAlign::TOP_CENTER, "%d", time.day_of_month);
-        it.printf(110, 160, id(font_medium_35), color_content, TextAlign::TOP_CENTER, "%s", id(todays_day_name).state.c_str());
-        it.printf(110, 195, id(font_medium_20), color_content, TextAlign::TOP_CENTER, "%s", id(todays_date_month_year).state.c_str());
+          it.printf(110, 5, id(font_bold_180), color_content, TextAlign::TOP_CENTER, "%d", time.day_of_month);
+          it.printf(110, 160, id(font_medium_35), color_content, TextAlign::TOP_CENTER, "%s", id(todays_day_name).state.c_str());
+          it.printf(110, 195, id(font_medium_20), color_content, TextAlign::TOP_CENTER, "%s", id(todays_date_month_year).state.c_str());
       
-        // Draw Calendar
+          // Draw Calendar
       
-        int calendar_x_pos = 250;
-        int calendar_y_pos = 35;
+          int calendar_x_pos = 250;
+          int calendar_y_pos = 35;
       
-        int days_padding_bottom = 10;
+          int days_padding_bottom = 10;
       
-        int circle_size = 17;
+          int circle_size = 17;
       
-        int cell_size_width = 50;
-        int cell_size_height = 30;
+          int cell_size_width = 50;
+          int cell_size_height = 30;
       
-        char cal[7][7][3]; // Calendar matrix including weekdays
-        int days_line_left_position = 0;
-        int days_line_right_position = 0;
+          char cal[7][7][3]; // Calendar matrix including weekdays
+          int days_line_left_position = 0;
+          int days_line_right_position = 0;
       
-        get_calendar_matrix(time.year, time.month, cal);
+          get_calendar_matrix(time.year, time.month, cal);
       
-        for (int i = 0; i < 7; i++) {
-          for (int j = 0; j < 7; j++) {
-            int x_pos = calendar_x_pos + cell_size_width * j;
-            int y_pos = calendar_y_pos + cell_size_height * i;
+          for (int i = 0; i < 7; i++) {
+            for (int j = 0; j < 7; j++) {
+              int x_pos = calendar_x_pos + cell_size_width * j;
+              int y_pos = calendar_y_pos + cell_size_height * i;
       
-            if (i == 0) {
-              // Header (day names)
-              it.printf(x_pos, y_pos, id(font_bold_25), color_content, TextAlign::CENTER, "%s", cal[i][j]);
-              if (j == 0) {
-                days_line_left_position = x_pos - (get_text_width( & it, id(font_bold_22), "%s", cal[i][j]) / 2);
-              } else if (j == 6) {
-                days_line_right_position = x_pos + (get_text_width( & it, id(font_bold_22), "%s", cal[i][j]) / 2);
-              }
-            } else {
-              // Day numbers
-              y_pos += days_padding_bottom;
-              if (atoi(cal[i][j]) == time.day_of_month) {
-                // Highlight current day
-                it.filled_circle(x_pos, y_pos - 1, circle_size, color_content);
-                it.printf(x_pos, y_pos, id(font_bold_22), color_background, TextAlign::CENTER, "%s", cal[i][j]);
+              if (i == 0) {
+                // Header (day names)
+                it.printf(x_pos, y_pos, id(font_bold_25), color_content, TextAlign::CENTER, "%s", cal[i][j]);
+                if (j == 0) {
+                  days_line_left_position = x_pos - (get_text_width( & it, id(font_bold_22), "%s", cal[i][j]) / 2);
+                } else if (j == 6) {
+                  days_line_right_position = x_pos + (get_text_width( & it, id(font_bold_22), "%s", cal[i][j]) / 2);
+                }
               } else {
-                it.printf(x_pos, y_pos, id(font_medium_22), color_content, TextAlign::CENTER, "%s", cal[i][j]);
+                // Day numbers
+                y_pos += days_padding_bottom;
+                if (atoi(cal[i][j]) == time.day_of_month) {
+                  // Highlight current day
+                  it.filled_circle(x_pos, y_pos - 1, circle_size, color_content);
+                  it.printf(x_pos, y_pos, id(font_bold_22), color_background, TextAlign::CENTER, "%s", cal[i][j]);
+                } else {
+                  it.printf(x_pos, y_pos, id(font_medium_22), color_content, TextAlign::CENTER, "%s", cal[i][j]);
+                }
               }
             }
+            if (i == 1) {
+              it.line(days_line_left_position, calendar_y_pos + (cell_size_height / 2), days_line_right_position, calendar_y_pos + (cell_size_height / 2), color_content);
+            }
           }
-          if (i == 1) {
-            it.line(days_line_left_position, calendar_y_pos + (cell_size_height / 2), days_line_right_position, calendar_y_pos + (cell_size_height / 2), color_content);
-          }
-        }
       
-        // End Draw Calendar
+          // End Draw Calendar
       
-        it.filled_rectangle(0, 230, 600, 3, color_content);
+          it.filled_rectangle(0, 230, 600, 3, color_content);
       
-        // Draw event list
+          // Draw event list
       
-        DynamicJsonDocument doc(4096);
-        deserializeJson(doc, id(calendar_json).state.c_str());
-        JsonArray entries = doc["entries"];
+          DynamicJsonDocument doc(4096);
+          deserializeJson(doc, id(calendar_json).state.c_str());
+          JsonArray entries = doc["entries"];
       
-        int current_y_position = 250; // Initial vertical position
-        const int max_y_position = 682; // Maximum vertical position
-        const int events_top_padding = 5; // Padding top first event within a day
-        const int event_spacing = 10; // Spacing between the events within a day
-        const int events_bottom_padding = 5; // Padding after the last entry of the day
-        const int day_spacing = 15; // Spacing between different days
+          int current_y_position = 250; // Initial vertical position
+          const int max_y_position = 682; // Maximum vertical position
+          const int events_top_padding = 5; // Padding top first event within a day
+          const int event_spacing = 10; // Spacing between the events within a day
+          const int events_bottom_padding = 5; // Padding after the last entry of the day
+          const int day_spacing = 15; // Spacing between different days
       
-        int max_event_title_chars = 30; // Max characters event title 
-        int max_event_subtitle_chars = 44; // Max characters event subtitle 
+          int max_event_title_chars = 30; // Max characters event title 
+          int max_event_subtitle_chars = 44; // Max characters event subtitle 
       
-        for (JsonVariant entry: entries) {
-          int day_number = entry["day"].as < int > ();
-          const char * day_name = entry["day_name"];
+          for (JsonVariant entry: entries) {
+            int day_number = entry["day"].as < int > ();
+            const char * day_name = entry["day_name"];
       
-          // Calculate day title height
-          int day_number_height = get_text_height( & it, id(font_medium_45), "%d", day_number);
-          int day_name_height = get_text_height( & it, id(font_medium_20), "%s", day_name);
-          int day_title_height = day_number_height + day_name_height; // Total space needed for the day title
+            // Calculate day title height
+            int day_number_height = get_text_height( & it, id(font_medium_45), "%d", day_number);
+            int day_name_height = get_text_height( & it, id(font_medium_20), "%s", day_name);
+            int day_title_height = day_number_height + day_name_height; // Total space needed for the day title
       
-          // Check if there's enough space for the day's title before drawing
-          if (current_y_position + day_title_height > max_y_position) break;
+            // Check if there's enough space for the day's title before drawing
+            if (current_y_position + day_title_height > max_y_position) break;
       
-          // Draw day title
-          it.printf(45, current_y_position, id(font_medium_45), color_content, TextAlign::TOP_CENTER, "%d", day_number);
-          it.printf(45, current_y_position + day_number_height - 5, id(font_medium_20), color_content, TextAlign::TOP_CENTER, "%s", day_name);
+            // Draw day title
+            it.printf(45, current_y_position, id(font_medium_45), color_content, TextAlign::TOP_CENTER, "%d", day_number);
+            it.printf(45, current_y_position + day_number_height - 5, id(font_medium_20), color_content, TextAlign::TOP_CENTER, "%s", day_name);
       
-          int entry_y_position = current_y_position + events_top_padding; // Initialize entry_y_position to align with the day number + optional padding
+            int entry_y_position = current_y_position + events_top_padding; // Initialize entry_y_position to align with the day number + optional padding
       
-          auto processEntry = [ & ](const JsonVariant & item) -> bool {
-            std::string summary = item["summary"].as < std::string > ();
-            const char * start = item["start"];
-            const char * end = item["end"];
-            const char * location_name = item["location_name"];
-            const char * calendar_name = item["calendar_name"];
+            auto processEntry = [ & ](const JsonVariant & item) -> bool {
+              std::string summary = item["summary"].as < std::string > ();
+              const char * start = item["start"];
+              const char * end = item["end"];
+              const char * location_name = item["location_name"];
+              const char * calendar_name = item["calendar_name"];
       
-            std::string start_time = start ? extract_time(start) : "";
-            std::string end_time = end ? extract_time(end) : "";
+              std::string start_time = start ? extract_time(start) : "";
+              std::string end_time = end ? extract_time(end) : "";
       
-            if (start_time.empty()) {
-              max_event_title_chars += 4;
-              max_event_subtitle_chars += 6;
-            }
-      
-            std::string subtitle_string = std::string(calendar_name) + (location_name && strlen(location_name) > 0 ? " · " + std::string(location_name) : "");
-            if (subtitle_string.length() > max_event_subtitle_chars) {
-              subtitle_string = subtitle_string.substr(0, max_event_subtitle_chars - 3) + "...";
-            }
-      
-            if (summary.length() > max_event_title_chars) {
-              summary = summary.substr(0, max_event_title_chars - 3) + "...";
-            }
-      
-            int summary_height = get_text_height( & it, id(font_bold_25), "%s", summary.c_str());
-            int subtitle_height = get_text_height( & it, id(font_medium_18), "%s", subtitle_string.c_str());
-      
-            // Check if event will still fit
-            if (entry_y_position + summary_height + subtitle_height + event_spacing <= max_y_position) {
-              // Draw event summary
-              it.printf(100, entry_y_position, id(font_bold_25), color_content, TextAlign::TOP_LEFT, "%s", summary.c_str());
-      
-              // Draw start time
-              if (!start_time.empty()) {
-                it.printf(590, entry_y_position, id(font_bold_25), color_content, TextAlign::TOP_RIGHT, "%s", start_time.c_str());
+              if (start_time.empty()) {
+                max_event_title_chars += 4;
+                max_event_subtitle_chars += 6;
               }
       
-              entry_y_position += summary_height + 2;
-      
-              // Draw subtitle string (calendar name and location)
-              it.printf(100, entry_y_position, id(font_medium_18), color_content, TextAlign::TOP_LEFT, "%s", subtitle_string.c_str());
-      
-              // Draw end time
-              if (!end_time.empty()) {
-                it.printf(590, entry_y_position, id(font_medium_18), color_content, TextAlign::TOP_RIGHT, "%s", end_time.c_str());
+              std::string subtitle_string = std::string(calendar_name) + (location_name && strlen(location_name) > 0 ? " · " + std::string(location_name) : "");
+              if (subtitle_string.length() > max_event_subtitle_chars) {
+                subtitle_string = subtitle_string.substr(0, max_event_subtitle_chars - 3) + "...";
               }
       
-              entry_y_position += subtitle_height + event_spacing;
+              if (summary.length() > max_event_title_chars) {
+                summary = summary.substr(0, max_event_title_chars - 3) + "...";
+              }
       
-              // Event drawn - return true
-              return true;
-            } else {
-              // Event did not fit and was not drawn - return false
-              return false;
-            }
-          };
+              int summary_height = get_text_height( & it, id(font_bold_25), "%s", summary.c_str());
+              int subtitle_height = get_text_height( & it, id(font_medium_18), "%s", subtitle_string.c_str());
       
-          JsonArray all_day = entry["all_day"];
-          JsonArray other = entry["other"];
+              // Check if event will still fit
+              if (entry_y_position + summary_height + subtitle_height + event_spacing <= max_y_position) {
+                // Draw event summary
+                it.printf(100, entry_y_position, id(font_bold_25), color_content, TextAlign::TOP_LEFT, "%s", summary.c_str());
       
-          for (JsonVariant item: all_day) {
-            if (!processEntry(item)) break;
-          }
-
-          for (JsonVariant item: other) {
-            if (!processEntry(item)) break;
-          }
-      
-          entry_y_position -= event_spacing + events_bottom_padding;
-      
-          // Draw the vertical line next to the day titles and events
-          it.line(85, current_y_position, 85, entry_y_position, color_content);
-      
-          // Update current_y_position for the next day, ensuring space between days
-          current_y_position = entry_y_position + day_spacing;
-        }
-      
-        // End Draw event list
-      
-        // Draw Footer
-      
-        auto index = id(footer).active_index();
-      
-        if (index.has_value()) {
-          if (index.value() == 0) {
-            it.printf(10, 704, id(font_bold_22), color_content, TextAlign::BOTTOM_LEFT, "%s", "Nächster Termin:");
-            it.filled_rectangle(0, 707, 600, 3, color_content);
-            it.filled_rectangle(0, 712, 600, 88, color_content);
-      
-            JsonObject first_day = doc["entries"][0].as < JsonObject > ();
-      
-            // Initialise a flag to determine whether to print the no more events message
-            bool no_upcoming_events_today = true;
-      
-            // Check if "entries" exists and has at least one element
-            if (doc.containsKey("entries") && doc["entries"].is < JsonArray > () && doc["entries"].size() > 0) {
-              JsonObject first_day = doc["entries"][0].as < JsonObject > ();
-      
-              // Check if 'is_today' is true and 'other' array has events
-              if (first_day.containsKey("is_today") && first_day["is_today"].as < int > () == 1 &&
-                first_day.containsKey("other") && first_day["other"].is < JsonArray > () && first_day["other"].size() > 0) {
-      
-                // There's an event today, so set flag to not print the no more appointments message
-                no_upcoming_events_today = false;
-      
-                // Safe to access entries[0]["other"][0] and proceed with displaying event details
-                JsonObject next_event = first_day["other"][0];
-      
-                const char * summary = next_event["summary"];
-                const char * start = next_event["start"];
-                const char * end = next_event["end"];
-                const char * location_name = next_event["location_name"];
-                const char * calendar_name = next_event["calendar_name"];
-      
-                std::string start_time = start ? extract_time(start) : "";
-                std::string end_time = end ? extract_time(end) : "";
-      
-                std::string subtitle_string = (location_name != nullptr) ? (std::string(calendar_name) + " · " + std::string(location_name)) : std::string(calendar_name);
-                if (subtitle_string.length() > 45) {
-                  subtitle_string = subtitle_string.substr(0, 42) + "...";
+                // Draw start time
+                if (!start_time.empty()) {
+                  it.printf(590, entry_y_position, id(font_bold_25), color_content, TextAlign::TOP_RIGHT, "%s", start_time.c_str());
                 }
       
-                it.printf(10, 726, id(font_bold_32), color_background, TextAlign::TOP_LEFT, "%s", summary);
-                it.printf(12, 786, id(font_medium_22), color_background, TextAlign::BOTTOM_LEFT, "%s", subtitle_string.c_str());
+                entry_y_position += summary_height + 2;
       
-                it.printf(590, 726, id(font_bold_32), color_background, TextAlign::TOP_RIGHT, "%s", start_time.c_str());
-                it.printf(588, 786, id(font_medium_22), color_background, TextAlign::BOTTOM_RIGHT, "%s", end_time.c_str());
-              }
-            }
-
-            // Check the flag to decide whether to print the no more appointments message
-            if (no_upcoming_events_today) {
-              it.printf(300, 740, id(font_bold_32), color_background, TextAlign::TOP_CENTER, "%s", "Keine weiteren Termine heute");
-            }
-          } else {
-            it.filled_rectangle(0, 685, 600, 3, color_content);
-            it.filled_rectangle(0, 690, 600, 110, color_content);
+                // Draw subtitle string (calendar name and location)
+                it.printf(100, entry_y_position, id(font_medium_18), color_content, TextAlign::TOP_LEFT, "%s", subtitle_string.c_str());
       
-            const int max_characters_per_line = 40;
-            const char * quote = id(random_quote).state.c_str();
-            size_t quote_length = std::strlen(quote);
+                // Draw end time
+                if (!end_time.empty()) {
+                  it.printf(590, entry_y_position, id(font_medium_18), color_content, TextAlign::TOP_RIGHT, "%s", end_time.c_str());
+                }
       
-            std::string first_part;
-            std::string rest;
+                entry_y_position += subtitle_height + event_spacing;
       
-            if (quote_length > max_characters_per_line) {
-              // Calculate the midpoint for an optimal split
-              int midpoint = quote_length / 2;
-              int split_pos_left = midpoint;
-              int split_pos_right = midpoint;
-            
-              // Search for the nearest space around the midpoint
-              while (split_pos_left > 0 && quote[split_pos_left] != ' ') split_pos_left--;
-              while (split_pos_right < quote_length && quote[split_pos_right] != ' ') split_pos_right++;
-            
-              // Choose the closest split position that doesn't exceed max characters per line
-              int split_pos;
-              if (midpoint - split_pos_left <= split_pos_right - midpoint && split_pos_left > 0) {
-                split_pos = split_pos_left;
-              } else if (split_pos_right < quote_length) {
-                split_pos = split_pos_right;
+                // Event drawn - return true
+                return true;
               } else {
-                // Default split position if no spaces are found near midpoint (unlikely due to search logic)
-                split_pos = midpoint;
+                // Event did not fit and was not drawn - return false
+                return false;
               }
-            
-              // Split the quote at the determined position
-              first_part = std::string(quote, quote + split_pos);
-              rest = std::string(quote + split_pos + 1);
-            
-              // Display the split quote
-              it.printf(300, 710, id(font_bold_25), color_background, TextAlign::TOP_CENTER, "%s", first_part.c_str());
-              it.printf(300, 737, id(font_bold_25), color_background, TextAlign::TOP_CENTER, "%s", rest.c_str());
-              it.printf(300, 785, id(font_medium_18), color_background, TextAlign::BOTTOM_CENTER, "%s", id(random_quote_author).state.c_str());
-            } else {
-              // Display the quote without splitting if it doesn't exceed the maximum characters per line
-              it.printf(300, 720, id(font_bold_25), color_background, TextAlign::TOP_CENTER, "%s", id(random_quote).state.c_str());
-              it.printf(300, 770, id(font_medium_18), color_background, TextAlign::BOTTOM_CENTER, "%s", id(random_quote_author).state.c_str());
+            };
+      
+            JsonArray all_day = entry["all_day"];
+            JsonArray other = entry["other"];
+      
+            for (JsonVariant item: all_day) {
+              if (!processEntry(item)) break;
             }
       
+            for (JsonVariant item: other) {
+              if (!processEntry(item)) break;
+            }
+      
+            entry_y_position -= event_spacing + events_bottom_padding;
+      
+            // Draw the vertical line next to the day titles and events
+            it.line(85, current_y_position, 85, entry_y_position, color_content);
+      
+            // Update current_y_position for the next day, ensuring space between days
+            current_y_position = entry_y_position + day_spacing;
           }
+      
+          // End Draw event list
+      
+          // Draw Footer
+      
+          auto index = id(footer).active_index();
+      
+          if (index.has_value()) {
+            if (index.value() == 0) {
+              it.printf(10, 704, id(font_bold_22), color_content, TextAlign::BOTTOM_LEFT, "%s", "Nächster Termin:");
+              it.filled_rectangle(0, 707, 600, 3, color_content);
+              it.filled_rectangle(0, 712, 600, 88, color_content);
+      
+              JsonObject first_day = doc["entries"][0].as < JsonObject > ();
+      
+              // Initialise a flag to determine whether to print the no more events message
+              bool no_upcoming_events_today = true;
+      
+              // Check if "entries" exists and has at least one element
+              if (doc.containsKey("entries") && doc["entries"].is < JsonArray > () && doc["entries"].size() > 0) {
+                JsonObject first_day = doc["entries"][0].as < JsonObject > ();
+      
+                // Check if 'is_today' is true and 'other' array has events
+                if (first_day.containsKey("is_today") && first_day["is_today"].as < int > () == 1 &&
+                  first_day.containsKey("other") && first_day["other"].is < JsonArray > () && first_day["other"].size() > 0) {
+      
+                  // There's an event today, so set flag to not print the no more appointments message
+                  no_upcoming_events_today = false;
+      
+                  // Safe to access entries[0]["other"][0] and proceed with displaying event details
+                  JsonObject next_event = first_day["other"][0];
+      
+                  const char * summary = next_event["summary"];
+                  const char * start = next_event["start"];
+                  const char * end = next_event["end"];
+                  const char * location_name = next_event["location_name"];
+                  const char * calendar_name = next_event["calendar_name"];
+      
+                  std::string start_time = start ? extract_time(start) : "";
+                  std::string end_time = end ? extract_time(end) : "";
+      
+                  std::string subtitle_string = (location_name != nullptr) ? (std::string(calendar_name) + " · " + std::string(location_name)) : std::string(calendar_name);
+                  if (subtitle_string.length() > 45) {
+                    subtitle_string = subtitle_string.substr(0, 42) + "...";
+                  }
+      
+                  it.printf(10, 726, id(font_bold_32), color_background, TextAlign::TOP_LEFT, "%s", summary);
+                  it.printf(12, 786, id(font_medium_22), color_background, TextAlign::BOTTOM_LEFT, "%s", subtitle_string.c_str());
+      
+                  it.printf(590, 726, id(font_bold_32), color_background, TextAlign::TOP_RIGHT, "%s", start_time.c_str());
+                  it.printf(588, 786, id(font_medium_22), color_background, TextAlign::BOTTOM_RIGHT, "%s", end_time.c_str());
+                }
+              }
+      
+              // Check the flag to decide whether to print the no more appointments message
+              if (no_upcoming_events_today) {
+                it.printf(300, 740, id(font_bold_32), color_background, TextAlign::TOP_CENTER, "%s", "Keine weiteren Termine heute");
+              }
+            } else {
+              it.filled_rectangle(0, 685, 600, 3, color_content);
+              it.filled_rectangle(0, 690, 600, 110, color_content);
+      
+              const int max_characters_per_line = 40;
+              const char * quote = id(random_quote).state.c_str();
+              size_t quote_length = std::strlen(quote);
+      
+              std::string first_part;
+              std::string rest;
+      
+              if (quote_length > max_characters_per_line) {
+                // Calculate the midpoint for an optimal split
+                int midpoint = quote_length / 2;
+                int split_pos_left = midpoint;
+                int split_pos_right = midpoint;
+      
+                // Search for the nearest space around the midpoint
+                while (split_pos_left > 0 && quote[split_pos_left] != ' ') split_pos_left--;
+                while (split_pos_right < quote_length && quote[split_pos_right] != ' ') split_pos_right++;
+      
+                // Choose the closest split position that doesn't exceed max characters per line
+                int split_pos;
+                if (midpoint - split_pos_left <= split_pos_right - midpoint && split_pos_left > 0) {
+                  split_pos = split_pos_left;
+                } else if (split_pos_right < quote_length) {
+                  split_pos = split_pos_right;
+                } else {
+                  // Default split position if no spaces are found near midpoint (unlikely due to search logic)
+                  split_pos = midpoint;
+                }
+      
+                // Split the quote at the determined position
+                first_part = std::string(quote, quote + split_pos);
+                rest = std::string(quote + split_pos + 1);
+      
+                // Display the split quote
+                it.printf(300, 710, id(font_bold_25), color_background, TextAlign::TOP_CENTER, "%s", first_part.c_str());
+                it.printf(300, 737, id(font_bold_25), color_background, TextAlign::TOP_CENTER, "%s", rest.c_str());
+                it.printf(300, 785, id(font_medium_18), color_background, TextAlign::BOTTOM_CENTER, "%s", id(random_quote_author).state.c_str());
+              } else {
+                // Display the quote without splitting if it doesn't exceed the maximum characters per line
+                it.printf(300, 720, id(font_bold_25), color_background, TextAlign::TOP_CENTER, "%s", id(random_quote).state.c_str());
+                it.printf(300, 770, id(font_medium_18), color_background, TextAlign::BOTTOM_CENTER, "%s", id(random_quote_author).state.c_str());
+              }
+      
+            }
+          }
+          // End Draw Footer
         }
-        // End Draw Footer
       }
