@@ -65,6 +65,7 @@ deep_sleep:
   sleep_duration: $deep_sleep_duration
   wakeup_pin: 
     number: 36
+    allow_other_uses: True
     inverted: true
   
 http_request:
@@ -329,6 +330,17 @@ font:
       - "\U000F0E8E" # calendar-sync
     
 binary_sensor:
+  - platform: gpio
+    pin:
+      inverted: True
+      number: 36
+      allow_other_uses: True
+    id: wake_up_button
+    internal: True
+    on_press:
+      then:
+        - script.execute: update_screen
+
   - platform: homeassistant
     id: disable_deep_sleep
     entity_id: input_boolean.disable_deep_sleep
