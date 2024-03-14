@@ -403,8 +403,8 @@ sensor:
       - multiply: 2
       - median:
           window_size: 31
-          send_every: 10
-          send_first_at: 10
+          send_every: 20
+          send_first_at: 20
   
   - platform: template
     name: "Battery Level"
@@ -412,7 +412,7 @@ sensor:
     entity_category: diagnostic
     device_class: battery
     unit_of_measurement: '%'
-    update_interval: 10s
+    update_interval: 20s
     lambda: |-
       return id(battery_voltage).state;
     filters:
