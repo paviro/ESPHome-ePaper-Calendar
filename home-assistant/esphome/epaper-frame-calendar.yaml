@@ -534,7 +534,7 @@ display:
       
           // Draw Calendar
       
-          int calendar_x_pos = 250;
+          int calendar_x_pos = 260;
           int calendar_y_pos = 35;
       
           int days_padding_bottom = 10;
