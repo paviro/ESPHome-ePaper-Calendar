@@ -686,7 +686,7 @@ display:
               if (!processEntry(item)) break;
             }
       
-            entry_y_position -= event_spacing + events_bottom_padding;
+            entry_y_position += events_bottom_padding - event_spacing;
       
             // Draw the vertical line next to the day titles and events
             it.line(85, current_y_position, 85, entry_y_position, color_content);
