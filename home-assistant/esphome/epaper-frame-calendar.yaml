@@ -75,6 +75,8 @@ http_request:
   
 # Enable logging
 logger:
+  logs:
+    switch: WARN
 
 json:
 
@@ -390,6 +392,7 @@ sensor:
     accuracy_decimals: 3
     device_class: voltage
     entity_category: diagnostic
+    update_interval: 1s
     lambda: |-
       id(battery_read_mosfet).turn_on();
       delay(1);
@@ -398,6 +401,10 @@ sensor:
       return adc;
     filters:
       - multiply: 2
+      - median:
+          window_size: 31
+          send_every: 10
+          send_first_at: 10
   
   - platform: template
     name: "Battery Level"
@@ -405,6 +412,7 @@ sensor:
     entity_category: diagnostic
     device_class: battery
     unit_of_measurement: '%'
+    update_interval: 10s
     lambda: |-
       return id(battery_voltage).state;
     filters:
