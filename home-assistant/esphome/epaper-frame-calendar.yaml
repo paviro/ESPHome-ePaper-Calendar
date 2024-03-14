@@ -703,7 +703,7 @@ display:
       
           if (index.has_value()) {
             if (index.value() == 0) {
-              it.printf(10, 704, id(font_bold_22), color_content, TextAlign::BOTTOM_LEFT, "%s", "Nächster Termin:");
+              it.printf(10, 704, id(font_bold_22), color_content, TextAlign::BOTTOM_LEFT, "%s", "Next Appointment:");
               it.filled_rectangle(0, 707, 600, 3, color_content);
               it.filled_rectangle(0, 712, 600, 88, color_content);
       
@@ -750,7 +750,7 @@ display:
       
               // Check the flag to decide whether to print the no more appointments message
               if (no_upcoming_events_today) {
-                it.printf(300, 740, id(font_bold_32), color_background, TextAlign::TOP_CENTER, "%s", "Keine weiteren Termine heute");
+                it.printf(300, 740, id(font_bold_32), color_background, TextAlign::TOP_CENTER, "%s", "No further appointments today");
               }
             } else {
               it.filled_rectangle(0, 685, 600, 3, color_content);
