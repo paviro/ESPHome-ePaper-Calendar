@@ -454,7 +454,7 @@ display:
   update_interval: never
   full_update_every: 5
   model: inkplate_6_v2
-  rotation: 270°
+  rotation: 90°
   
   ckv_pin: 32
   sph_pin: 33
