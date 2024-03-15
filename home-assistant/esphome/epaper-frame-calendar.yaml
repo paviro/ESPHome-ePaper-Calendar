@@ -17,9 +17,9 @@ substitutions:
   
   # Specify the full and empty voltage of the battery you use
   battery_full_voltage: "4.2" # in V
-  battery_empty_voltage: "3.1" # in V
 
 
+  battery_empty_voltage: "3.2" # in V
 esphome:
   name: $device_name
   friendly_name: $friendly_name
@@ -401,10 +401,10 @@ sensor:
       return adc;
     filters:
       - multiply: 2
-      - median:
-          window_size: 31
-          send_every: 20
-          send_first_at: 20
+      - min:
+          window_size: 30
+          send_every: 10
+          send_first_at: 10
   
   - platform: template
     name: "Battery Level"
@@ -412,7 +412,7 @@ sensor:
     entity_category: diagnostic
     device_class: battery
     unit_of_measurement: '%'
-    update_interval: 20s
+    update_interval: 10s
     lambda: |-
       return id(battery_voltage).state;
     filters:
@@ -422,7 +422,10 @@ sensor:
       - clamp:
           min_value: 0
           max_value: 100
-
+    on_value_range:
+      - below: 0.0
+        then:
+          - script.execute: update_screen
 
 text_sensor:
   - platform: homeassistant
