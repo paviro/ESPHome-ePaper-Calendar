@@ -3,3 +3,4 @@
 </p>
 
 # ESPHome ePaper Calendar: 3D Printable Case
+The 3d files for this project can be found on [Printables](https://www.printables.com/model/806222-epaper-calendar).
