@@ -27,43 +27,27 @@ esphome:
     - includes/calendar/calendar_matrix.h
     - includes/calendar/text_utilities.h
   on_boot:
-    priority: -100.0
-    then:
-      - if:
-          condition: # 0 = normal boot | 2 = wakeup button | 4 = wake up timer 
-            - lambda: 'return esp_sleep_get_wakeup_cause() == 4;'
-          then:
-            # Deep sleep wake up: update screen if data has changed
-            - wait_until:
-                condition:
-                  lambda: 'return id(calendar_data_received) == true && id(calendar_data_update_during_deep_sleep_received) == true;'
-            - script.execute: update_screen_if_data_updated
-          else:
-            - if:
-                condition:
-                  - lambda: 'return esp_sleep_get_wakeup_cause() == 0;'
-                then:
-                  # Cold boot: update screen before we received data to show boot screen
-                  - script.execute: update_screen
-            - wait_until:
-                condition:
-                  lambda: 'return id(calendar_data_received) == true;'
-            - script.execute: update_screen
-      - wait_until:
-          condition:
-            lambda: 'return id(homeassistant_time).now().is_valid();'
-      - lambda: 'id(last_wake_up).publish_state(id(homeassistant_time).now().timestamp);'
-      - script.execute: check_deep_sleep
-
+    - priority: 300.0
+      then:
+        - if:
+            condition:
+              # 0 = normal boot
+              - lambda: 'return esp_sleep_get_wakeup_cause() == 0;'
+            then:
+              # Show "waiting for data" screen
+              - script.execute: update_screen
+    - priority: -100.0
+      then:
+        - script.execute: boot_script
 
 esp32:
   board: esp-wrover-kit
   framework:
     type: arduino
-
+    
 preferences:
   flash_write_interval: 10min
-
+  
 deep_sleep:
   id: deep_sleep_1
   sleep_duration: $deep_sleep_duration
@@ -71,7 +55,7 @@ deep_sleep:
     number: 36
     allow_other_uses: True
     inverted: true
-  
+    
 http_request:
   id: http_request_data
   useragent: esphome/device
@@ -81,14 +65,14 @@ http_request:
 logger:
   logs:
     switch: WARN
-
+    
 json:
 
 # Enable Home Assistant API
 api:
   encryption:
     key: $api_key
-
+    
 select:
     - platform: template
       name: Appearance
@@ -128,7 +112,7 @@ button:
     entity_category: config
     on_press:
       - script.execute: update_screen
-
+      
 switch:
   - platform: gpio
     id: battery_read_mosfet
@@ -137,13 +121,9 @@ switch:
       pca6416a: pca6416a_hub
       number: 9
       inverted: false
-
+      
 globals:
-  - id: calendar_data_received
-    type: bool
-    restore_value: no
-    initial_value: 'false'
-  - id: calendar_data_update_during_deep_sleep_received
+  - id: data_received
     type: bool
     restore_value: no
     initial_value: 'false'
@@ -159,21 +139,28 @@ globals:
     type: bool
     restore_value: yes
     initial_value: 'true'
-
+  - id: boot_script_finished_running
+    type: bool
+    restore_value: no
+    initial_value: 'false'
+    
 script:
   - id: update_screen
     then:
+      - logger.log: 'Running update_screen script...'
       - if:
           condition:
-            lambda: 'return id(footer).state == "Random Quote";'
+            and:
+              - lambda: 'return id(footer).state == "Random Quote";'
+              - wifi.connected
           then:
             - script.execute: fetch_random_quote
       - component.update: inkplate_display
       - lambda: 'id(recorded_display_refresh) += 1;'
-      - wait_until:
-          condition:
-            lambda: 'return id(homeassistant_time).now().is_valid();'
-      - lambda: 'id(last_display_update).publish_state(id(homeassistant_time).now().timestamp);'
+      - logger.log: 'Updating last_display_update timestamp...'
+      - sensor.template.publish:                                                                                                                                           
+          id: last_display_update                                                                                                                                                   
+          state: !lambda 'return id(homeassistant_time).now().timestamp;'
       
   - id: fetch_random_quote
     then:
@@ -229,31 +216,57 @@ script:
             - logger.log: 'Battery is empty - Shutting down...'
             - button.press: shutdown_button
             
-      
   - id: check_deep_sleep
     then:
+          - delay: 30s
           - if:
               condition:
-                and:
                   - binary_sensor.is_off: disable_deep_sleep
               then:
-                - delay: 45s
                 - deep_sleep.enter: deep_sleep_1
               else:
                 - logger.log: 'Deep sleep disabled - Waiting for OTA update...'
-      
+                
+  - id: boot_script
+    then:
+      - logger.log: 'Running boot script...'
+      - wait_until:
+          condition: time.has_time
+      - sensor.template.publish:                                                                                                                                           
+          id: last_wake_up                                                                                                                                                   
+          state: !lambda 'return id(homeassistant_time).now().timestamp;'
+      - wait_until:
+          condition:
+            lambda: 'return id(data_received) == true;'
+      - if:
+          condition:
+            # 4 = wake up timer
+            - lambda: 'return esp_sleep_get_wakeup_cause() == 4;'
+          then:
+            # Deep sleep wake up - update screen if data has changed
+            - script.execute: update_screen_if_data_updated
+          else:
+            # normal boot or wakeup button - update screen
+            - script.execute: update_screen
+      - script.execute: check_deep_sleep
+      - lambda: 'id(boot_script_finished_running) = true;'
+                
 time:
   - platform: homeassistant
     id: homeassistant_time
     on_time:
       - seconds: 0
-        minutes: /1
+        minutes: /5
         then:
-          - script.execute: update_screen_if_data_updated
-                
+          - if:
+              condition: 
+                lambda: 'return id(boot_script_finished_running) == true;'
+              then:
+                - script.execute: update_screen_if_data_updated
+          
 ota:
   password: $ota_key
-
+  
 wifi:
   ssid: !secret wifi_ssid
   password: !secret wifi_password
@@ -424,8 +437,8 @@ font:
     id: font_bold_180
     size: 180
     glyphs: ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
-  
     
+  
   - file: $font_mdi
     id: font_mdi_large
     size: 300
@@ -433,7 +446,7 @@ font:
       # Definitions from https://github.com/kivymd/KivyMD/blob/master/kivymd/icon_definitions.py
       - "\U000f10cd" # battery-alert-variant-outline
       - "\U000F0E8E" # calendar-sync
-    
+      
 binary_sensor:
   - platform: gpio
     pin:
@@ -445,7 +458,7 @@ binary_sensor:
     on_click:
       then:
         - script.execute: update_screen
-
+        
   - platform: homeassistant
     id: disable_deep_sleep
     entity_id: input_boolean.disable_deep_sleep
@@ -455,14 +468,11 @@ binary_sensor:
           binary_sensor.is_off: disable_deep_sleep
         then:
           - deep_sleep.enter: deep_sleep_1
-
+          
   - platform: homeassistant
     entity_id: $calendar_data_update_during_deep_sleep_entity_id
     id: calendar_data_update_during_deep_sleep
-    on_state:
-      then:
-         - lambda: 'id(calendar_data_update_during_deep_sleep_received) = true;'
-
+          
 sensor:
   - platform: template
     name: Last Display Update
@@ -479,7 +489,7 @@ sensor:
     device_class: timestamp
     entity_category: "diagnostic"
     id: last_wake_up
-
+    
   - platform: template
     name: Recorded Display Refresh
     accuracy_decimals: 0
@@ -487,26 +497,26 @@ sensor:
     state_class: "total_increasing"
     entity_category: "diagnostic"
     lambda: 'return id(recorded_display_refresh);'
-
+    
   - platform: wifi_signal
     name: WiFi Signal Sensor
     id: wifisignal
     entity_category: "diagnostic"
     update_interval: 60s
-  
+    
   - platform: template
-    name: Wakeup Cause
+    name: Last Wake Up Cause
     entity_category: "diagnostic"
     accuracy_decimals: 0
     lambda: return esp_sleep_get_wakeup_cause();
-
+    
   - platform: adc
     id: battery_adc
     update_interval: never
     attenuation: 11db
     internal: True
     pin: 35
-
+    
   - platform: template
     name: "Battery Voltage"
     id: battery_voltage
@@ -527,7 +537,7 @@ sensor:
           window_size: 30
           send_every: 10
           send_first_at: 10
-  
+          
   - platform: template
     name: "Battery Level"
     id: battery_level
@@ -548,7 +558,7 @@ sensor:
       - below: 0.0
         then:
           - script.execute: update_screen
-
+          
 text_sensor:
   - platform: homeassistant
     entity_id: $calendar_data_entity_id
@@ -556,18 +566,18 @@ text_sensor:
     id: calendar_json
     on_value:
       then:
-         - lambda: 'id(calendar_data_received) = true;'
+         - lambda: 'id(data_received) = true;'
           
   - platform: template
     id: random_quote_author
   - platform: template
     id: random_quote
-
+    
   - platform: homeassistant
     entity_id: $calendar_data_entity_id
     attribute: todays_day_name
     id: todays_day_name
-
+    
   - platform: homeassistant
     entity_id: $calendar_data_entity_id
     attribute: todays_date_month_year
@@ -578,7 +588,7 @@ i2c:
 pca6416a:
   - id: pca6416a_hub
     address: 0x20
-
+    
 display:
 - platform: inkplate6
   id: inkplate_display
@@ -647,7 +657,7 @@ display:
       } else {
         id(battery_empty_symbol_shown) = false;
       
-        if (id(calendar_data_received) == false) {
+        if (id(data_received) == false) {
           it.printf(300, 350, id(font_mdi_large), color_content, TextAlign::CENTER, "%s", icon_map["calendar-sync"].c_str());
           it.printf(300, 500, id(font_medium_35), color_content, TextAlign::TOP_CENTER, "Waiting for data...");
         } else {
