@@ -36,7 +36,7 @@ esphome:
             # Deep sleep wake up: update screen if data has changed
             - wait_until:
                 condition:
-                  lambda: 'return id(data_received) == true;'
+                  lambda: 'return id(calendar_data_received) == true && id(calendar_data_update_during_deep_sleep_received) == true;'
             - script.execute: update_screen_if_data_updated
           else:
             - if:
@@ -47,7 +47,7 @@ esphome:
                   - script.execute: update_screen
             - wait_until:
                 condition:
-                  lambda: 'return id(data_received) == true;'
+                  lambda: 'return id(calendar_data_received) == true;'
             - script.execute: update_screen
       - script.execute: check_deep_sleep
 
@@ -135,7 +135,11 @@ switch:
       inverted: false
 
 globals:
-  - id: data_received
+  - id: calendar_data_received
+    type: bool
+    restore_value: no
+    initial_value: 'false'
+  - id: calendar_data_update_during_deep_sleep_received
     type: bool
     restore_value: no
     initial_value: 'false'
@@ -445,6 +449,9 @@ binary_sensor:
   - platform: homeassistant
     entity_id: $calendar_data_update_during_deep_sleep_entity_id
     id: calendar_data_update_during_deep_sleep
+    on_state:
+      then:
+         - lambda: 'id(calendar_data_update_during_deep_sleep_received) = true;'
 
 sensor:
   - platform: template
@@ -529,7 +536,7 @@ text_sensor:
     id: calendar_json
     on_value:
       then:
-         - lambda: 'id(data_received) = true;'
+         - lambda: 'id(calendar_data_received) = true;'
           
   - platform: template
     id: random_quote_author
@@ -620,7 +627,7 @@ display:
       } else {
         id(battery_empty_symbol_shown) = false;
       
-        if (id(data_received) == false) {
+        if (id(calendar_data_received) == false) {
           it.printf(300, 350, id(font_mdi_large), color_content, TextAlign::CENTER, "%s", icon_map["calendar-sync"].c_str());
           it.printf(300, 500, id(font_medium_35), color_content, TextAlign::TOP_CENTER, "Waiting for data...");
         } else {
