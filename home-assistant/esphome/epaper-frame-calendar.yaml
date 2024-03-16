@@ -49,6 +49,10 @@ esphome:
                 condition:
                   lambda: 'return id(calendar_data_received) == true;'
             - script.execute: update_screen
+      - wait_until:
+          condition:
+            lambda: 'return id(homeassistant_time).now().is_valid();'
+      - lambda: 'id(last_wake_up).publish_state(id(homeassistant_time).now().timestamp);'
       - script.execute: check_deep_sleep
 
 
@@ -162,8 +166,10 @@ script:
             - script.execute: fetch_random_quote
       - component.update: inkplate_display
       - lambda: 'id(recorded_display_refresh) += 1;'
-      - delay: 1s
-      - lambda: 'id(display_last_update).publish_state(id(homeassistant_time).now().timestamp);'
+      - wait_until:
+          condition:
+            lambda: 'return id(homeassistant_time).now().is_valid();'
+      - lambda: 'id(last_display_update).publish_state(id(homeassistant_time).now().timestamp);'
       
   - id: fetch_random_quote
     then:
@@ -455,10 +461,16 @@ binary_sensor:
 
 sensor:
   - platform: template
-    name: Display Last Update
+    name: Last Display Update
     device_class: timestamp
     entity_category: "diagnostic"
-    id: display_last_update
+    id: last_display_update
+    
+  - platform: template
+    name: Last Wake Up
+    device_class: timestamp
+    entity_category: "diagnostic"
+    id: last_wake_up
 
   - platform: template
     name: Recorded Display Refresh
