@@ -1,3 +1,6 @@
+# ------------------------------------------------
+#           Change configuration here
+# ------------------------------------------------
 substitutions:
   device_name: epaper-calendar
   friendly_name: "ePaper Calendar"
@@ -20,6 +23,10 @@ substitutions:
   battery_empty_voltage: "3.2" # in V
   
   
+# ----------------------------------------------------------------------------------
+#             Danger Zone - only change if you know what you are doing
+# ----------------------------------------------------------------------------------
+
 esphome:
   name: $device_name
   friendly_name: $friendly_name
