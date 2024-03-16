@@ -465,6 +465,12 @@ sensor:
     id: wifisignal
     entity_category: "diagnostic"
     update_interval: 60s
+  
+  - platform: template
+    name: Wakeup Cause
+    entity_category: "diagnostic"
+    accuracy_decimals: 0
+    lambda: return esp_sleep_get_wakeup_cause();
 
   - platform: adc
     id: battery_adc
