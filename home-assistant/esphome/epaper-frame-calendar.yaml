@@ -427,7 +427,7 @@ binary_sensor:
       allow_other_uses: True
     id: wake_up_button
     internal: True
-    on_press:
+    on_click:
       then:
         - script.execute: update_screen
 
