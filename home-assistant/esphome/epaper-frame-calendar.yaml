@@ -151,6 +151,10 @@ globals:
     type: int
     restore_value: yes
     initial_value: '0'
+  - id: last_display_update_stored
+    type: long int
+    restore_value: yes
+    initial_value: '0'
   - id: battery_empty_symbol_shown
     type: bool
     restore_value: yes
@@ -465,6 +469,10 @@ sensor:
     device_class: timestamp
     entity_category: "diagnostic"
     id: last_display_update
+    lambda: "return id(last_display_update_stored);"
+    on_value:
+      then:
+        - lambda: "id(last_display_update_stored) = x;"
     
   - platform: template
     name: Last Wake Up
