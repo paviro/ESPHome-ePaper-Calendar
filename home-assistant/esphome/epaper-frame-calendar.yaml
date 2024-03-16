@@ -17,9 +17,9 @@ substitutions:
   
   # Specify the full and empty voltage of the battery you use
   battery_full_voltage: "4.2" # in V
-
-
   battery_empty_voltage: "3.2" # in V
+  
+  
 esphome:
   name: $device_name
   friendly_name: $friendly_name
