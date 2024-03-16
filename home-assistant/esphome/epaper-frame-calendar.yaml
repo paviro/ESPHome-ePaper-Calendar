@@ -148,7 +148,7 @@ globals:
     type: bool
     restore_value: no
     initial_value: 'false'
-  - id: recorded_display_refresh
+  - id: display_refreshes
     type: int
     restore_value: yes
     initial_value: '0'
@@ -177,7 +177,7 @@ script:
           then:
             - script.execute: fetch_random_quote
       - component.update: inkplate_display
-      - lambda: 'id(recorded_display_refresh) += 1;'
+      - lambda: 'id(display_refreshes) += 1;'
       - logger.log: 'Updating last_display_update timestamp...'
       - sensor.template.publish:                                                                                                                                           
           id: last_display_update                                                                                                                                                   
@@ -512,12 +512,12 @@ sensor:
     id: last_wake_up
     
   - platform: template
-    name: Recorded Display Refresh
+    name: Display Refreshes
     accuracy_decimals: 0
     unit_of_measurement: "Refreshes"
     state_class: "total_increasing"
     entity_category: "diagnostic"
-    lambda: 'return id(recorded_display_refresh);'
+    lambda: 'return id(display_refreshes);'
     
   - platform: wifi_signal
     name: WiFi Signal Sensor
