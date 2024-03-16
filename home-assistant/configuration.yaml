@@ -12,7 +12,7 @@ template:
   - binary_sensor:
     - name: ESP Calendar Data Update During Deep Sleep
       state: >
-        {{ states.sensor.esp_calendar_data.last_updated > states.sensor.epaper_calendar_recorded_display_refresh.last_updated }}
+        {{ states.sensor.esp_calendar_data.last_updated > states.sensor.epaper_calendar_last_display_update.last_updated }}
   # Sensor that contains the json calendar data that ESPHome then parses to display the events
   - trigger:
         - platform: time_pattern
