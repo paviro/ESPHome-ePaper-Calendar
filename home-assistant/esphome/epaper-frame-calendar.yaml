@@ -680,8 +680,8 @@ display:
         id(battery_empty_symbol_shown) = false;
       
         if (id(data_received) == false) {
-          it.printf(300, 350, id(font_mdi_large), color_content, TextAlign::CENTER, "%s", icon_map["calendar-sync"].c_str());
-          it.printf(300, 500, id(font_medium_35), color_content, TextAlign::TOP_CENTER, "Waiting for data...");
+          it.printf(300, 400, id(font_mdi_large), color_content, TextAlign::CENTER, "%s", icon_map["calendar-sync"].c_str());
+          it.printf(300, 780, id(font_medium_20), color_content, TextAlign::BOTTOM_CENTER, "Waiting for data...");
         } else {
           auto time = id(homeassistant_time).now();
       
