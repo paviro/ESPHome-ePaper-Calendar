@@ -517,13 +517,14 @@ sensor:
     unit_of_measurement: "Refreshes"
     state_class: "total_increasing"
     entity_category: "diagnostic"
+    update_interval: 10s
     lambda: 'return id(display_refreshes);'
     
   - platform: wifi_signal
     name: WiFi Signal Sensor
     id: wifisignal
     entity_category: "diagnostic"
-    update_interval: 60s
+    update_interval: 10s
     
   - platform: template
     name: Last Wake Up Cause
