@@ -23,6 +23,9 @@ substitutions:
 esphome:
   name: $device_name
   friendly_name: $friendly_name
+  project:
+    name: "paulvincentroll.epaper_calendar"
+    version: "1.0.0"
   includes:
     - includes/calendar/calendar_matrix.h
     - includes/calendar/text_utilities.h
