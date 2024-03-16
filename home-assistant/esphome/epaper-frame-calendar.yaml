@@ -220,12 +220,13 @@ script:
     then:
           - if:
               condition:
-                binary_sensor.is_on: disable_deep_sleep
+                and:
+                  - binary_sensor.is_off: disable_deep_sleep
               then:
-                - logger.log: 'Deep sleep disabled - Waiting for OTA update...'
-              else:
                 - delay: 45s
                 - deep_sleep.enter: deep_sleep_1
+              else:
+                - logger.log: 'Deep sleep disabled - Waiting for OTA update...'
       
 time:
   - platform: homeassistant
