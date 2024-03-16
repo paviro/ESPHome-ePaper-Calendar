@@ -86,7 +86,13 @@ select:
       entity_category: config
       on_value:
         then:
-          - script.execute: update_screen
+          - if:
+              condition:
+                # Only update screen on_value after boot script finished running so we don't 
+                # update the screen on receiving the initial state after waking up.
+                lambda: 'return id(boot_script_finished_running) == true;'
+              then:
+                - script.execute: update_screen
     - platform: template
       name: Footer
       id: footer
@@ -99,8 +105,13 @@ select:
       entity_category: config
       on_value:
         then:
-          - script.execute: update_screen
-
+          - if:
+              condition: 
+                # See above
+                lambda: 'return id(boot_script_finished_running) == true;'
+              then:
+                - script.execute: update_screen
+          
 button:
   - platform: shutdown
     name: Shutdown
