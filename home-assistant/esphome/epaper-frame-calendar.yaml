@@ -179,8 +179,8 @@ script:
       - component.update: inkplate_display
       - lambda: 'id(display_refreshes) += 1;'
       - logger.log: 'Updating last_display_update timestamp...'
-      - sensor.template.publish:                                                                                                                                           
-          id: last_display_update                                                                                                                                                   
+      - sensor.template.publish:
+          id: last_display_update
           state: !lambda 'return id(homeassistant_time).now().timestamp;'
       
   - id: fetch_random_quote
@@ -253,8 +253,8 @@ script:
       - logger.log: 'Running boot script...'
       - wait_until:
           condition: time.has_time
-      - sensor.template.publish:                                                                                                                                           
-          id: last_wake_up                                                                                                                                                   
+      - sensor.template.publish:
+          id: last_wake_up
           state: !lambda 'return id(homeassistant_time).now().timestamp;'
       - wait_until:
           condition:
