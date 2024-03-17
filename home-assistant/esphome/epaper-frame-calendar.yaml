@@ -69,7 +69,7 @@ deep_sleep:
 http_request:
   id: http_request_data
   useragent: esphome/device
-  timeout: 10s
+  timeout: 2s
   
 # Enable logging
 logger:
