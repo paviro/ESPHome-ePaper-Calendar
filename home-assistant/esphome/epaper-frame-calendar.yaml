@@ -255,7 +255,7 @@ script:
           condition:
             - lambda: |-
                 auto time = id(homeassistant_time).now();
-                return (0 <= time.hour && time.hour <= 5);
+                return (0 <= time.hour && time.hour <= 6);
           then:
             - logger.log: "Nighttime - using extended deep sleep duration."
             - deep_sleep.enter:
