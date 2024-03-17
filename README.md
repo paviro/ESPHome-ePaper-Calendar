@@ -10,7 +10,7 @@ The device automatically displays as many entries as will fit on the screen. Eve
 <p align="center">
 	<img src="https://github.com/paviro/ESPHome-ePaper-Calendar/assets/992826/70344da3-d793-4516-8b8c-cae3b836d326">
 </p>
-The ePaper calendar retrieves calendar data from a template sensor within [Home Assistant] (https://www.home-assistant.io). A Python script converts the calendar data into the format required by the ESPHome firmware.  
+The ePaper calendar retrieves calendar data from a template sensor within [Home Assistant](https://www.home-assistant.io). A Python script converts the calendar data into the format required by the ESPHome firmware.  
 
 A random quote from [api.quotable.io](https://api.quotable.io) can be fetched directly by the device.  
 
