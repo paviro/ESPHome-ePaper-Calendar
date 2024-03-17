@@ -6,6 +6,8 @@ substitutions:
   friendly_name: "ePaper Calendar"
   
   deep_sleep_duration: 10min
+  night_time_deep_sleep_duration: 60min
+  
   calendar_data_entity_id: sensor.esp_calendar_data
   calendar_data_update_during_deep_sleep_entity_id: binary_sensor.esp_calendar_data_update_during_deep_sleep
   
@@ -60,7 +62,6 @@ preferences:
   
 deep_sleep:
   id: deep_sleep_1
-  sleep_duration: $deep_sleep_duration
   wakeup_pin: 
     number: 36
     allow_other_uses: True
@@ -244,9 +245,27 @@ script:
               condition:
                   - binary_sensor.is_off: disable_deep_sleep
               then:
-                - deep_sleep.enter: deep_sleep_1
+                - script.execute: enter_deep_sleep
               else:
                 - logger.log: 'Deep sleep disabled - Waiting for OTA update...'
+      
+  - id: enter_deep_sleep
+    then:
+      - if:
+          condition:
+            - lambda: |-
+                auto time = id(homeassistant_time).now();
+                return (0 <= time.hour && time.hour <= 5);
+          then:
+            - logger.log: "Nighttime - using extended deep sleep duration."
+            - deep_sleep.enter:
+                id: deep_sleep_1
+                sleep_duration: $night_time_deep_sleep_duration
+          else:
+            - logger.log: "Daytime - using normal deep sleep duration."
+            - deep_sleep.enter:
+                id: deep_sleep_1
+                sleep_duration: $deep_sleep_duration
                 
   - id: boot_script
     then:
@@ -488,7 +507,7 @@ binary_sensor:
         condition:
           binary_sensor.is_off: disable_deep_sleep
         then:
-          - deep_sleep.enter: deep_sleep_1
+          - script.execute: enter_deep_sleep
           
   - platform: homeassistant
     entity_id: $calendar_data_update_during_deep_sleep_entity_id
