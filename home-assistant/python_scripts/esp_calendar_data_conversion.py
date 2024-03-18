@@ -7,7 +7,7 @@ DAY_NAMES = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 # How many entries to send to the ESPHome device
 MAX_ENTRIES = 8
 
-def convert_calendar_format(data):
+def convert_calendar_format(data, today):
     # Initialize a dictionary to store events grouped by date
     events_by_date = {}
     entrie_count = 0
@@ -101,7 +101,7 @@ input_data = data["calendar"]
 today = data["now"]
 
 # Convert the received data into the format expected by the epaper display
-calendar_entries = convert_calendar_format(input_data)
+calendar_entries = convert_calendar_format(input_data, today)
 
 # Pass the output back to Home Assistant
 output["entries"] = calendar_entries
