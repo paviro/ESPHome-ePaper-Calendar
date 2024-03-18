@@ -250,7 +250,7 @@ script:
   - id: check_deep_sleep
     then:
           # Wait so some more sensor updates can be pushed out
-          - delay: 3s
+          - delay: 500ms
           - if:
               condition:
                   - binary_sensor.is_off: disable_deep_sleep
@@ -586,7 +586,7 @@ sensor:
     accuracy_decimals: 3
     device_class: voltage
     entity_category: diagnostic
-    update_interval: 50ms
+    update_interval: 5ms
     lambda: |-
       id(battery_read_mosfet).turn_on();
       delay(1);
@@ -596,9 +596,9 @@ sensor:
     filters:
       - multiply: 2
       - min:
-          window_size: 40
-          send_every: 20
-          send_first_at: 20
+          window_size: 50
+          send_every: 50
+          send_first_at: 50
           
   - platform: template
     name: "Battery Level"
