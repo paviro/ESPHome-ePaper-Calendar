@@ -51,6 +51,15 @@ esphome:
     - priority: -100.0
       then:
         - script.execute: boot_script
+  on_shutdown:
+    - priority: -100.0
+      then:
+        # Update all sensors 
+        - component.update: display_refreshes_sensor
+        - component.update: wifi_signal_sensor
+        - component.update: last_wake_up_cause
+        - component.update: battery_level
+          
 
 esp32:
   board: esp-wrover-kit
@@ -249,12 +258,7 @@ script:
                 - script.execute: enter_deep_sleep
               else:
                 - logger.log: 'Deep sleep disabled - Waiting for OTA update...'
-                
                 # Suspend component update to reduce frequency when deep sleep is disabled
-                - component.suspend: display_refreshes_sensor
-                - component.suspend: wifi_signal_sensor
-                - component.suspend: last_wake_up_cause
-                - component.suspend: battery_level
                 - component.suspend: battery_voltage
                 
       
@@ -304,17 +308,6 @@ time:
   - platform: homeassistant
     id: homeassistant_time
     on_time:
-      - seconds: 0
-        minutes: '*'
-        then:
-          - if:
-              condition:
-                - binary_sensor.is_on: disable_deep_sleep
-              then:
-                - component.update: display_refreshes_sensor
-                - component.update: wifi_signal_sensor
-                - component.update: last_wake_up_cause
-                - component.update: battery_level
       - seconds: '*'
         then:
           - if:
@@ -565,21 +558,18 @@ sensor:
     unit_of_measurement: "Refreshes"
     state_class: "total_increasing"
     entity_category: "diagnostic"
-    update_interval: 500ms
     lambda: 'return id(display_refreshes);'
     
   - platform: wifi_signal
     name: WiFi Signal Sensor
     id: wifi_signal_sensor
     entity_category: "diagnostic"
-    update_interval: 500ms
     
   - platform: template
     name: Last Wake Up Cause
     id: last_wake_up_cause
     entity_category: "diagnostic"
     accuracy_decimals: 0
-    update_interval: 500ms
     lambda: return esp_sleep_get_wakeup_cause();
     
   - platform: adc
@@ -616,7 +606,6 @@ sensor:
     entity_category: diagnostic
     device_class: battery
     unit_of_measurement: '%'
-    update_interval: 500ms
     lambda: |-
       return id(battery_voltage).state;
     filters:
