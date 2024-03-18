@@ -18,8 +18,16 @@ def convert_calendar_format(data):
             if 'description' in event:
                 event.pop('description')
                 
-            # Extract date from start time
-            event_date = event['start'].split("T")[0]
+            # Attempt to split the 'event[start]' into date and time parts
+            parts = event['start'].split("T")
+            event_date = parts[0]
+            event_time = parts[1] if len(parts) > 1 else None  # event_time might not be present
+            
+            # Compare the event_date with today's date
+            if event_date < today:
+                # If the event's date is before today, update it to today's date (in case of multi day event starting before today)
+                event['start'] = today if event_time is None else f"{today}T{event_time}"
+                event_date = today
             
             # Add calendar name to event
             # If calendar key exists in CALENDAR_NAMES, use its value, otherwise capitalize the second part of the key
@@ -90,6 +98,7 @@ def convert_calendar_format(data):
 
 # Access the data received from the Home Assistant service call
 input_data = data["calendar"]
+today = data["now"]
 
 # Convert the received data into the format expected by the epaper display
 calendar_entries = convert_calendar_format(input_data)

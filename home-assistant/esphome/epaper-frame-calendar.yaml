@@ -793,8 +793,8 @@ display:
           const int events_bottom_padding = 5; // Padding after the last entry of the day
           const int day_spacing = 15; // Spacing between different days
       
-          int max_event_title_chars = 30; // Max characters event title 
-          int max_event_subtitle_chars = 44; // Max characters event subtitle 
+          int max_event_title_length = 30; // Max characters event title 
+          int max_event_subtitle_length = 44; // Max characters event subtitle 
       
           for (JsonVariant entry: entries) {
             int day_number = entry["day"].as < int > ();
@@ -820,13 +820,48 @@ display:
               const char * end = item["end"];
               const char * location_name = item["location_name"];
               const char * calendar_name = item["calendar_name"];
+
+              // Create copy we can modify
+              int max_event_title_chars = max_event_title_length; 
+              int max_event_subtitle_chars = max_event_subtitle_length; 
       
               std::string start_time = start ? extract_time(start) : "";
               std::string end_time = end ? extract_time(end) : "";
       
+              // start_time == empty => day event (check if multiple days to add that information)
               if (start_time.empty()) {
-                max_event_title_chars += 4;
-                max_event_subtitle_chars += 6;
+      
+                // Get current date in format yyyy-mm-dd
+                auto get_current_date_str = []() -> std::string {
+                  auto now = id(homeassistant_time).now();
+      
+                  char buffer[11];
+                  sprintf(buffer, "%d-%02d-%02d", now.year, now.month, now.day_of_month);
+      
+                  return std::string(buffer);
+                };
+      
+                // Calculate length of event in days
+                int days = days_between_dates(start, end);
+      
+                // If event is longer than just today
+                if (days > 1) {
+                  if (start == get_current_date_str()) {
+                    // Event is today
+                    // Subtract today from the length in days
+                    days -= 1;
+                    end_time = "left";
+                  } else {
+                    end_time = "long";
+                  }
+      
+                  start_time = std::to_string(days) + ((days > 1) ? " days" : " day");
+      
+                } else {
+                  // Event won't have time information so the title and subtitle can be longer
+                  max_event_title_chars += 4;
+                  max_event_subtitle_chars += 6;
+                }
               }
       
               std::string subtitle_string = std::string(calendar_name) + (location_name && strlen(location_name) > 0 ? " · " + std::string(location_name) : "");

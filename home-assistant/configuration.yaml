@@ -36,6 +36,7 @@ template:
         - service: python_script.esp_calendar_data_conversion
           data:
             calendar: "{{ calendar_response }}"
+            now: "{{ now().date() }}"
           response_variable: calendar_converted
     sensor:
         - name: ESP Calendar Data
