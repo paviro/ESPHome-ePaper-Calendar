@@ -38,6 +38,7 @@ esphome:
   includes:
     - includes/calendar/calendar_utilities.h
     - includes/calendar/text_utilities.h
+    - includes/calendar/misc_utilities.h
   on_boot:
     - priority: 300.0
       then:
@@ -724,13 +725,21 @@ display:
         } else {
           auto time = id(homeassistant_time).now();
       
-          it.printf(110, 5, id(font_bold_180), color_content, TextAlign::TOP_CENTER, "%d", time.day_of_month);
-          it.printf(110, 160, id(font_medium_35), color_content, TextAlign::TOP_CENTER, "%s", id(todays_day_name).state.c_str());
-          it.printf(110, 195, id(font_medium_20), color_content, TextAlign::TOP_CENTER, "%s", id(todays_date_month_year).state.c_str());
+          // Calculate today date width
+          int day_of_month_width = get_text_width( & it, id(font_bold_180), "%d", time.day_of_month);
+          int todays_day_name_width = get_text_width( & it, id(font_medium_35), "%s", id(todays_day_name).state.c_str());
+          int day_title_width = get_text_width( & it, id(font_medium_20), "%s", id(todays_date_month_year).state.c_str());
+          
+          int todays_date_widths[3] = {day_of_month_width, todays_day_name_width, day_title_width};
+          int max_todays_date_width = find_max_in_array(todays_date_widths, 3);
+
+          it.printf(max_todays_date_width / 2 + 15, 5, id(font_bold_180), color_content, TextAlign::TOP_CENTER, "%d", time.day_of_month);
+          it.printf(max_todays_date_width / 2 + 15, 160, id(font_medium_35), color_content, TextAlign::TOP_CENTER, "%s", id(todays_day_name).state.c_str());
+          it.printf(max_todays_date_width / 2 + 15, 195, id(font_medium_20), color_content, TextAlign::TOP_CENTER, "%s", id(todays_date_month_year).state.c_str());
       
           // Draw Calendar
       
-          int calendar_x_pos = 260;
+          int calendar_x_pos = 265;
           int calendar_y_pos = 35;
       
           int days_padding_bottom = 10;
