@@ -36,7 +36,7 @@ esphome:
     name: "paulvincentroll.epaper_calendar"
     version: "1.0.0"
   includes:
-    - includes/calendar/calendar_matrix.h
+    - includes/calendar/calendar_utilities.h
     - includes/calendar/text_utilities.h
   on_boot:
     - priority: 300.0
