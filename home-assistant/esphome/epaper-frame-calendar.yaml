@@ -240,7 +240,8 @@ script:
             
   - id: check_deep_sleep
     then:
-          - delay: 30s
+          # Wait so some more sensor updates can be pushed out
+          - delay: 3s
           - if:
               condition:
                   - binary_sensor.is_off: disable_deep_sleep
@@ -248,6 +249,14 @@ script:
                 - script.execute: enter_deep_sleep
               else:
                 - logger.log: 'Deep sleep disabled - Waiting for OTA update...'
+                
+                # Suspend component update to reduce frequency when deep sleep is disabled
+                - component.suspend: display_refreshes_sensor
+                - component.suspend: wifi_signal_sensor
+                - component.suspend: last_wake_up_cause
+                - component.suspend: battery_level
+                - component.suspend: battery_voltage
+                
       
   - id: enter_deep_sleep
     then:
@@ -296,6 +305,24 @@ time:
     id: homeassistant_time
     on_time:
       - seconds: 0
+        minutes: '*'
+        then:
+          - if:
+              condition:
+                - binary_sensor.is_on: disable_deep_sleep
+              then:
+                - component.update: display_refreshes_sensor
+                - component.update: wifi_signal_sensor
+                - component.update: last_wake_up_cause
+                - component.update: battery_level
+      - seconds: '*'
+        then:
+          - if:
+              condition:
+                - binary_sensor.is_on: disable_deep_sleep
+              then:
+                - component.update: battery_voltage
+      - seconds: 0
         minutes: /5
         then:
           - if:
@@ -310,6 +337,7 @@ ota:
 wifi:
   ssid: !secret wifi_ssid
   password: !secret wifi_password
+  fast_connect: true
   
 # Include custom fonts
 font:
@@ -532,23 +560,26 @@ sensor:
     
   - platform: template
     name: Display Refreshes
+    id: display_refreshes_sensor
     accuracy_decimals: 0
     unit_of_measurement: "Refreshes"
     state_class: "total_increasing"
     entity_category: "diagnostic"
-    update_interval: 10s
+    update_interval: 500ms
     lambda: 'return id(display_refreshes);'
     
   - platform: wifi_signal
     name: WiFi Signal Sensor
-    id: wifisignal
+    id: wifi_signal_sensor
     entity_category: "diagnostic"
-    update_interval: 10s
+    update_interval: 500ms
     
   - platform: template
     name: Last Wake Up Cause
+    id: last_wake_up_cause
     entity_category: "diagnostic"
     accuracy_decimals: 0
+    update_interval: 500ms
     lambda: return esp_sleep_get_wakeup_cause();
     
   - platform: adc
@@ -565,7 +596,7 @@ sensor:
     accuracy_decimals: 3
     device_class: voltage
     entity_category: diagnostic
-    update_interval: 1s
+    update_interval: 50ms
     lambda: |-
       id(battery_read_mosfet).turn_on();
       delay(1);
@@ -575,9 +606,9 @@ sensor:
     filters:
       - multiply: 2
       - min:
-          window_size: 30
-          send_every: 10
-          send_first_at: 10
+          window_size: 40
+          send_every: 20
+          send_first_at: 20
           
   - platform: template
     name: "Battery Level"
@@ -585,7 +616,7 @@ sensor:
     entity_category: diagnostic
     device_class: battery
     unit_of_measurement: '%'
-    update_interval: 10s
+    update_interval: 500ms
     lambda: |-
       return id(battery_voltage).state;
     filters:
