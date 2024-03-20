@@ -6,9 +6,8 @@ This guide details the process for compiling and uploading the firmware to an In
 
 ### 1. Firmware Preparation:
 
-- Install ESPHome, you can follow [this guide](https://esphome.io/guides/getting_started_hassio#installing-esphome-dashboard) to get started.
 - If you are using [Hass.io](https://www.home-assistant.io/blog/2017/07/25/introducing-hassio/), you will need the [Samba share](https://github.com/home-assistant/addons/blob/master/samba/DOCS.md) add-on to access the required folders within your Home Assistant installation.
-
+- Install ESPHome: You can follow [this guide](https://esphome.io/guides/getting_started_hassio#installing-esphome-dashboard) to get started.
    - Locate the `esphome` directory within the project files of this repository.
    - Transfer all contents from this directory to your ESPHome configuration directory.
      - If your configuration directory has existing `fonts` or `includes` directories, merge their contents instead of overwriting.
