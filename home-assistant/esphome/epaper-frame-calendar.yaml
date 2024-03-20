@@ -496,8 +496,8 @@ font:
       'ũ', 'Ū', 'ū', 'Ů', 'ů', 'Ű', 'ű', 'Ų', 'ų', 'Ŵ', 'ŵ', 'Ŷ', 'ŷ', 'Ÿ', 'Ź', 
       'ź', 'Ż', 'ż', 'Ž', 'ž', 'Ǎ', 'ǎ', 'Ș', 'ș', 'Ț', 'ț', 'ẞ', 'ạ', 'ấ']
   - file: $font_bold
-    id: font_bold_180
-    size: 180
+    id: font_bold_170
+    size: 170
     glyphs: ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
     
   
@@ -726,28 +726,38 @@ display:
           auto time = id(homeassistant_time).now();
       
           // Calculate today date width
-          int day_of_month_width = get_text_width( & it, id(font_bold_180), "%d", time.day_of_month);
+          int day_of_month_width = get_text_width( & it, id(font_bold_170), "%d", time.day_of_month);
           int todays_day_name_width = get_text_width( & it, id(font_medium_35), "%s", id(todays_day_name).state.c_str());
           int day_title_width = get_text_width( & it, id(font_medium_20), "%s", id(todays_date_month_year).state.c_str());
           
           int todays_date_widths[3] = {day_of_month_width, todays_day_name_width, day_title_width};
           int max_todays_date_width = find_max_in_array(todays_date_widths, 3);
+          
+          
+          int todays_date_x_offset = 20;
 
-          it.printf(max_todays_date_width / 2 + 15, 5, id(font_bold_180), color_content, TextAlign::TOP_CENTER, "%d", time.day_of_month);
-          it.printf(max_todays_date_width / 2 + 15, 160, id(font_medium_35), color_content, TextAlign::TOP_CENTER, "%s", id(todays_day_name).state.c_str());
-          it.printf(max_todays_date_width / 2 + 15, 195, id(font_medium_20), color_content, TextAlign::TOP_CENTER, "%s", id(todays_date_month_year).state.c_str());
-      
-          // Draw Calendar
-      
-          int calendar_x_pos = 265;
-          int calendar_y_pos = 35;
-      
+          int calendar_x_pos = 260;
+          int calendar_y_pos = 35; 
+
           int days_padding_bottom = 10;
       
           int circle_size = 17;
       
           int cell_size_width = 50;
           int cell_size_height = 30;
+          
+          
+          if (max_todays_date_width > 210) {
+            todays_date_x_offset = 13;
+            calendar_x_pos = 280;
+            cell_size_width = 48;
+          }
+          
+          it.printf(max_todays_date_width / 2 + todays_date_x_offset, 10, id(font_bold_170), color_content, TextAlign::TOP_CENTER, "%d", time.day_of_month);
+          it.printf(max_todays_date_width / 2 + todays_date_x_offset, 159, id(font_medium_35), color_content, TextAlign::TOP_CENTER, "%s", id(todays_day_name).state.c_str());
+          it.printf(max_todays_date_width / 2 + todays_date_x_offset, 193, id(font_medium_20), color_content, TextAlign::TOP_CENTER, "%s", id(todays_date_month_year).state.c_str());
+      
+          // Draw Calendar
       
           char cal[7][7][3]; // Calendar matrix including weekdays
           int days_line_left_position = 0;
