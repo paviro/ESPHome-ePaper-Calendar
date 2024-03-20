@@ -64,6 +64,7 @@ Customize your device further with these configurations in `epaper-frame-calenda
 - **Device Information:** Set unique device names, sleep durations, and calendar data entity IDs.
   - `device_name`: This should be a unique name on your network, restricted to lower case letters, numbers and hyphens, and up to 24 characters long.
   - `friendly_name`: Name used in Home Assistant as the integration and device name. Entities that the device provides are automatically prefixed with it.
+    - If you change this value you will need to update the entity id **states.sensor.`epaper_calendar_last_display_update`.last_updated** within the `ESP Calendar Data Update During Deep Sleep` binary_sensor in the Home Assistant `configuration.yaml`.
   - `deep_sleep_duration`: The amount of time the device will sleep after checking for an updated calendar. Increasing this will increase battery life, but will also increase the time it takes to update the display.
   - `night_time_deep_sleep_duration`: Extended sleep time from 0 am to 6 am to save battery overnight.
   - `calendar_data_entity_id`: The entity ID of the calendar sensor added in the Home Assistant configuration step. Normally you will not need to change this, but if you are running multiple ePaper calendars you may want each one to use a different data source, and if you have set up a second sensor in Home Assistant you can set this here.
