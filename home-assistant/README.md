@@ -4,7 +4,7 @@
 
 This guide details the process for compiling and uploading the firmware to an Inkplate 6 board for your ePaper calendar device using ESPHome.
 
-### 1. Install required add-ons:
+### 1. Install Required Add-ons:
 
 - If you are using [Hass.io](https://www.home-assistant.io/blog/2017/07/25/introducing-hassio/), you will need the [Samba share](https://github.com/home-assistant/addons/blob/master/samba/DOCS.md) add-on to access the required folders within your Home Assistant installation.
 - Install ESPHome: You can follow [this guide](https://esphome.io/guides/getting_started_hassio#installing-esphome-dashboard) to get started.
