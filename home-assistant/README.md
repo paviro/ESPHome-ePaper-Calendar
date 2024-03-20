@@ -4,29 +4,31 @@
 
 This guide details the process for compiling and uploading the firmware to an Inkplate 6 board for your ePaper calendar device using ESPHome.
 
-### 1. Firmware Preparation:
+### 1. Install required add-ons:
 
 - If you are using [Hass.io](https://www.home-assistant.io/blog/2017/07/25/introducing-hassio/), you will need the [Samba share](https://github.com/home-assistant/addons/blob/master/samba/DOCS.md) add-on to access the required folders within your Home Assistant installation.
 - Install ESPHome: You can follow [this guide](https://esphome.io/guides/getting_started_hassio#installing-esphome-dashboard) to get started.
-   - Locate the `esphome` directory within the project files of this repository.
-   - Transfer all contents from this directory to your ESPHome configuration directory.
-     - If your configuration directory has existing `fonts` or `includes` directories, merge their contents instead of overwriting.
-     - The same applies to an existing `secrets.yaml` file.
 
-### 2. Font Configuration:
+### 2. Firmware Preparation:
+- Locate the `esphome` directory within the project files of this repository.
+ - Transfer all contents from this directory to your ESPHome configuration directory.
+   - If your configuration directory has existing `fonts` or `includes` directories, merge their contents instead of overwriting.
+   - The same applies to an existing `secrets.yaml` file.
+
+### 3. Font Configuration:
    - Download the required fonts and add them to the appropriate subdirectories within the `fonts` folder in your ESPHome directory.
 
-### 3. WiFi Credentials:
+### 4. WiFi Credentials:
    - Add your WiFi SSID and password to the `secrets.yaml` file, if not already done.
 
-### 4. Configuration File Adjustments:
+### 5. Configuration File Adjustments:
    - Open `epaper-frame-calendar.yaml`.
    - Modify the settings at the beginning of the file as needed. Mandatory changes include:
      - Adding an `api_key` (generate one [here](https://esphome.io/components/api.html)).
      - Adding an `ota_key` for protection against unauthorized firmware updates.
    - See the **ESPHome Configuration File Details** at the end for more information on the available settings.
 
-### 5. Firmware Flashing:
+### 6. Firmware Flashing:
    - Connect the Inkplate device to your computer via USB.
    - Compile and upload the firmware to the device using ESPHome.
 
