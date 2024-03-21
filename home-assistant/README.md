@@ -62,19 +62,22 @@ To make your ePaper calendar work properly, you need to add some sensors to Home
 
 Customize your device further with these configurations in `epaper-frame-calendar.yaml`:
 
-- **Device Information:** Set unique device names, sleep durations, and calendar data entity IDs.
+- **Device Information:** Set unique device names and calendar data entity IDs.
   - `device_name`: This should be a unique name on your network, restricted to lower case letters, numbers and hyphens, and up to 24 characters long.
   - `friendly_name`: Name used in Home Assistant as the integration and device name. Entities that the device provides are automatically prefixed with it.
     - If you change this value you will need to update the entity id **states.sensor.`epaper_calendar_last_display_update`.last_updated** within the `ESP Calendar Data Update During Deep Sleep` binary_sensor in the Home Assistant `configuration.yaml`.
-  - `deep_sleep_duration`: The amount of time the device will sleep after checking for an updated calendar. Lengthening this period helps extend battery life, though it also means that new events will take longer to appear on the calendar. However, the display will always refresh at the end of an event or the transition to a new day, irrespective of the sleep settings.
-  - `night_time_deep_sleep_duration`: Extended sleep time from 0 am to 6 am to save battery overnight.
   - `calendar_data_entity_id`: The entity ID of the calendar sensor added in the Home Assistant configuration step. Normally you will not need to change this, but if you are running multiple ePaper calendars you may want each one to use a different data source, and if you have set up a second sensor in Home Assistant you can set this here.
   - `calendar_data_update_during_deep_sleep_entity_id`: As with the last one, you should not need to change this unless you are running multiple ePaper calendars. The entity named here is used to indicate whether the screen should be refreshed after waking from deep sleep.
+- **Deep Sleep:** Configure your device's deep sleep behaviour.
+   - `deep_sleep_duration`: The amount of time the device will sleep after checking for an updated calendar. Lengthening this period helps extend battery life, though it also means that new events will take longer to appear on the calendar. However, the display will always refresh at the end of an event or the transition to a new day, irrespective of the sleep settings.
+   - `night_time_deep_sleep_duration`: This setting allows for a longer sleep duration overnight to conserve battery life. However, if this extended sleep period exceeds the designated night window, it will be set to end at the end of the night window.
+   - `night_time_start`: Hour of the day when the night window should start (0-24).
+   - `night_time_end`: Hour of the day when the night window should end (0-24).
 - **API and OTA Keys:** Secure your device and communication.
   - `api_key`: Encrypts communication with Home Assistant. Generate a random one [here](https://esphome.io/components/api.html).
   - `ota_key`: This key protects your device from unauthorised OTA updates and is required to send a firmware update to the device over the network.
 - **Fonts and Display:** Adjust font paths if necessary.
-   - `font_medium`: The path to a font file that contains the medium version of the font you are using.
+  - `font_medium`: The path to a font file that contains the medium version of the font you are using.
   - `font_bold`: The path to a font file that contains the bold version of the font you are using.
   - `font_mdi`: The path to a font file containing the Material Design Icons web font.
   - **Note:** If you are using custom fonts, you will need to adjust some of the positioning within the lambda code that draws the display.

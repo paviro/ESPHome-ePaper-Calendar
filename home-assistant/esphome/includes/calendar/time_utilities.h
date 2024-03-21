@@ -30,14 +30,15 @@ long parse_time_to_seconds(String time_string) {
 }
 
 
-long seconds_until_midnight(int current_hour, int current_minute, int current_second) {
+long seconds_until_midnight(const esphome::ESPTime& time) {
     long total_seconds_day = 86400;
-    long seconds_passed_today = (current_hour * 3600) + (current_minute * 60) + current_second;
+    long seconds_passed_today = (time.hour * 3600) + (time.minute * 60) + time.second;
     
     return total_seconds_day - seconds_passed_today;
 }
 
-long seconds_until_closest_event_end(unsigned long current_time, unsigned long event_end) {
+long seconds_until_closest_event_end(const esphome::ESPTime& time, unsigned long event_end) {
+    unsigned long current_time = time.timestamp;
     // Check if the event has already ended
     if (current_time >= event_end) {
         // Event has already ended
@@ -46,4 +47,18 @@ long seconds_until_closest_event_end(unsigned long current_time, unsigned long e
         // Calculate and return the seconds until the event ends
         return event_end - current_time;
     }
+}
+
+long seconds_until_night_end(const esphome::ESPTime& time, int night_time_end) {
+    long seconds_until_night_end = 0;
+
+    if (time.hour < night_time_end) {
+        // Before end of night today
+        seconds_until_night_end = (night_time_end - time.hour - 1) * 3600 + (59 - time.minute) * 60 + (60 - time.second);
+    } else {
+        // After start of night, calculate time until night end next day
+        seconds_until_night_end = ((24 - time.hour + night_time_end) - 1) * 3600 + (59 - time.minute) * 60 + (60 - time.second);
+    }
+    
+    return seconds_until_night_end;
 }

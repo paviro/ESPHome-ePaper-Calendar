@@ -6,7 +6,10 @@ substitutions:
   friendly_name: "ePaper Calendar"
   
   deep_sleep_duration: 20min
-  night_time_deep_sleep_duration: 90min
+  night_time_deep_sleep_duration: 4h
+  
+  night_time_start: "22"
+  night_time_end: "6"
   
   calendar_data_entity_id: sensor.esp_calendar_data
   calendar_data_update_during_deep_sleep_entity_id: binary_sensor.esp_calendar_data_update_during_deep_sleep
@@ -268,24 +271,34 @@ script:
       - lambda: |-
           auto time = id(homeassistant_time).now();
 
+          int night_time_start = $night_time_start;
+          int night_time_end = $night_time_end;
+
           // Default deep sleep duration
           long deep_sleep_duration_in_sec = parse_time_to_seconds("$deep_sleep_duration");
           
-          if (0 <= time.hour && time.hour <= 6){
+          if (time.hour >= night_time_start || time.hour < night_time_end){
             // Night time use extended deep sleep duration
             deep_sleep_duration_in_sec = parse_time_to_seconds("$night_time_deep_sleep_duration");
             ESP_LOGD("deep_sleep_duration_finder", "Default duration (night time): %ld seconds", deep_sleep_duration_in_sec);
+
+            long night_end = seconds_until_night_end(time, night_time_end);
+            if (deep_sleep_duration_in_sec > night_end) {
+                  deep_sleep_duration_in_sec = night_end;
+                  ESP_LOGD("deep_sleep_duration_finder", "Night time duration exceeds end of the configured night time, shortening to: %ld seconds", deep_sleep_duration_in_sec);
+            }
+
           } else {
             ESP_LOGD("deep_sleep_duration_finder", "Default duration (day time): %ld seconds", deep_sleep_duration_in_sec);
           }
           
           // Time until midnight (+ 2s delay)
-          long midnight = seconds_until_midnight(time.hour, time.minute, time.second);
+          long midnight = seconds_until_midnight(time);
           ESP_LOGD("deep_sleep_duration_finder", "Time until day change: %ld seconds", midnight);
           midnight = midnight != 0 ? midnight + 2 : midnight;
 
           // Time until the next event end time (+ 61s delay)
-          long next_event = seconds_until_closest_event_end(time.timestamp, id(closest_end_time).state);
+          long next_event = seconds_until_closest_event_end(time, id(closest_end_time).state);
           ESP_LOGD("deep_sleep_duration_finder", "Time until next event ends: %ld seconds", next_event);
           next_event = next_event != 0 ? next_event + 61 : next_event;
 
