@@ -34,7 +34,7 @@ esphome:
   friendly_name: $friendly_name
   project:
     name: "paulvincentroll.epaper_calendar"
-    version: "1.0.0"
+    version: "1.2.0"
   includes:
     - includes/calendar/calendar_utilities.h
     - includes/calendar/text_utilities.h
