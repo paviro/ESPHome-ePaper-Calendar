@@ -46,5 +46,5 @@ template:
             todays_date_month_year: >
               {% set months = ["January", "Februrary", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"] %}
               {{ months[now().month-1] }} {{  now().strftime('%Y') }}
-            closest_end_time: "{{ as_timestamp(calendar_converted.closest_end_time) }}"
+            closest_end_time: "{{ as_timestamp(calendar_converted.closest_end_time, default=0) }}"
             entries: "{{ calendar_converted.entries }}"
