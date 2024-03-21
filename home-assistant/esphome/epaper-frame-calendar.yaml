@@ -5,8 +5,8 @@ substitutions:
   device_name: epaper-calendar
   friendly_name: "ePaper Calendar"
   
-  deep_sleep_duration: 15min
-  night_time_deep_sleep_duration: 60min
+  deep_sleep_duration: 20min
+  night_time_deep_sleep_duration: 90min
   
   calendar_data_entity_id: sensor.esp_calendar_data
   calendar_data_update_during_deep_sleep_entity_id: binary_sensor.esp_calendar_data_update_during_deep_sleep
