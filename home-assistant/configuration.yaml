@@ -16,8 +16,7 @@ template:
   # Sensor that contains the json calendar data that ESPHome then parses to display the events
   - trigger:
         - platform: time_pattern
-          # Run every 30 seconds can be changed here
-          seconds: /30
+          minutes: "*"
     action:
         # Get the calendar data
         - service: calendar.get_events
@@ -47,4 +46,5 @@ template:
             todays_date_month_year: >
               {% set months = ["January", "Februrary", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"] %}
               {{ months[now().month-1] }} {{  now().strftime('%Y') }}
-            calendar: "{{ calendar_converted }}"
+            closest_end_time: "{{ as_timestamp(calendar_converted.closest_end_time) }}"
+            entries: "{{ calendar_converted.entries }}"

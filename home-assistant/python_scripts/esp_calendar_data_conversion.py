@@ -12,6 +12,9 @@ def convert_calendar_format(data, today):
     events_by_date = {}
     entrie_count = 0
     
+    # Variable to store the end time of the closest event that will end
+    closest_end_time = None
+    
     # Iterate through calendar keys and events
     for calendar_key, events_list in data.items():
         for event in events_list['events']:
@@ -77,7 +80,10 @@ def convert_calendar_format(data, today):
                 other_events.append(event)
                 
             entrie_count = entrie_count + 1
-            
+        
+        if other_events and date == today:
+            closest_end_time = sorted(other_events, key=lambda item:dt_util.parse_datetime(item['end']), reverse=False)[0]["end"]
+        
         if all_day_events or other_events:
             # Sort other_events by start time
             other_events.sort(key=lambda item:dt_util.parse_datetime(item['start']), reverse=False)
@@ -94,14 +100,15 @@ def convert_calendar_format(data, today):
             }
             result.append(day_item)
         
-    return result
+    return (result, closest_end_time)
 
 # Access the data received from the Home Assistant service call
 input_data = data["calendar"]
 today = data["now"]
 
 # Convert the received data into the format expected by the epaper display
-calendar_entries = convert_calendar_format(input_data, today)
+converted_data = convert_calendar_format(input_data, today)
 
 # Pass the output back to Home Assistant
-output["entries"] = calendar_entries
+output["entries"] = converted_data[0]
+output["closest_end_time"] = converted_data[1]

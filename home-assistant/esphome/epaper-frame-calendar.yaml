@@ -38,6 +38,7 @@ esphome:
   includes:
     - includes/calendar/calendar_utilities.h
     - includes/calendar/text_utilities.h
+    - includes/calendar/time_utilities.h
     - includes/calendar/misc_utilities.h
   on_boot:
     - priority: 300.0
@@ -262,24 +263,42 @@ script:
                 # Suspend component update to reduce frequency when deep sleep is disabled
                 - component.suspend: battery_voltage
                 
-      
   - id: enter_deep_sleep
     then:
-      - if:
-          condition:
-            - lambda: |-
-                auto time = id(homeassistant_time).now();
-                return (0 <= time.hour && time.hour <= 6);
-          then:
-            - logger.log: "Nighttime - using extended deep sleep duration."
-            - deep_sleep.enter:
-                id: deep_sleep_1
-                sleep_duration: $night_time_deep_sleep_duration
-          else:
-            - logger.log: "Daytime - using normal deep sleep duration."
-            - deep_sleep.enter:
-                id: deep_sleep_1
-                sleep_duration: $deep_sleep_duration
+      - lambda: |-
+          auto time = id(homeassistant_time).now();
+
+          // Default deep sleep duration
+          long deep_sleep_duration_in_sec = parse_time_to_seconds("$deep_sleep_duration");
+          
+          if (0 <= time.hour && time.hour <= 6){
+            // Night time use extended deep sleep duration
+            deep_sleep_duration_in_sec = parse_time_to_seconds("$night_time_deep_sleep_duration");
+            ESP_LOGD("deep_sleep_duration_finder", "Default duration (night time): %ld seconds", deep_sleep_duration_in_sec);
+          } else {
+            ESP_LOGD("deep_sleep_duration_finder", "Default duration (day time): %ld seconds", deep_sleep_duration_in_sec);
+          }
+          
+          // Time until midnight (+ 2s delay)
+          long midnight = seconds_until_midnight(time.hour, time.minute, time.second);
+          ESP_LOGD("deep_sleep_duration_finder", "Time until day change: %ld seconds", midnight);
+          midnight = midnight != 0 ? midnight + 2 : midnight;
+
+          // Time until the next event end time (+ 61s delay)
+          long next_event = seconds_until_closest_event_end(time.timestamp, id(closest_end_time).state);
+          ESP_LOGD("deep_sleep_duration_finder", "Time until next event ends: %ld seconds", next_event);
+          next_event = next_event != 0 ? next_event + 61 : next_event;
+
+          // Calculate which comes first: default deep sleep duration, midnight, next event ends
+          long sleep_durations[3] = {deep_sleep_duration_in_sec, midnight, next_event};
+          long next_sleep_duration = find_non_zero_min_in_array(sleep_durations, 3);
+          ESP_LOGD("deep_sleep_duration_finder", "Next sleep duration will be: %ld seconds", next_sleep_duration);
+          
+          // Use result as the next deep sleep duration
+          id(deep_sleep_1).set_sleep_duration(next_sleep_duration*1000);
+
+      - deep_sleep.enter:
+          id: deep_sleep_1
                 
   - id: boot_script
     then:
@@ -573,6 +592,12 @@ sensor:
     accuracy_decimals: 0
     lambda: return esp_sleep_get_wakeup_cause();
     
+  - platform: homeassistant
+    entity_id: $calendar_data_entity_id
+    attribute: closest_end_time
+    id: closest_end_time
+    
+    
   - platform: adc
     id: battery_adc
     update_interval: never
@@ -624,7 +649,7 @@ sensor:
 text_sensor:
   - platform: homeassistant
     entity_id: $calendar_data_entity_id
-    attribute: calendar
+    attribute: entries
     id: calendar_json
     on_value:
       then:
@@ -803,7 +828,7 @@ display:
       
           DynamicJsonDocument doc(4096);
           deserializeJson(doc, id(calendar_json).state.c_str());
-          JsonArray entries = doc["entries"];
+          JsonArray entries = doc.as<JsonArray>();
       
           int current_y_position = 250; // Initial vertical position
           const int max_y_position = 682; // Maximum vertical position
