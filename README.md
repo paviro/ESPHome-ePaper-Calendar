@@ -8,7 +8,7 @@
 </p>
 
 
-This sleek and minimalist ePaper calendar dynamically displays as many appointments as can fit on the available screen real estate. It groups events that occur on the same day, while multi-day events show either the remaining days or the total days if they occur in the future. Designed with energy efficiency in mind, the firmware tries to optimise power consumption to extend battery life between charges.
+This sleek and minimalist ePaper calendar dynamically displays as many appointments as can fit on the available screen real estate. It groups events that occur on the same day, while multi-day events show either the remaining days or the total days if they occur in the future. Designed with energy efficiency in mind, the firmware tries to optimise power consumption to extend battery life between charges (over a month).
 
 ## Architecture Overview
 
