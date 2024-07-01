@@ -358,7 +358,8 @@ time:
                 - script.execute: update_screen_if_data_updated
           
 ota:
-  password: $ota_key
+  - platform: esphome
+    password: $ota_key
   
 wifi:
   ssid: !secret wifi_ssid
