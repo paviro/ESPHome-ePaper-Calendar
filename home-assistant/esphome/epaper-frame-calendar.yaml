@@ -85,6 +85,7 @@ http_request:
   id: http_request_data
   useragent: esphome/device
   timeout: 2s
+  verify_ssl: false
   
 # Enable logging
 logger:
@@ -202,7 +203,6 @@ script:
     then:
       - http_request.get:
           url: "https://api.quotable.io/quotes/random?maxLength=75"
-          verify_ssl: false
           on_response:
             then:
               - lambda: |-
